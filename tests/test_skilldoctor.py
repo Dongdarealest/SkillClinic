@@ -103,6 +103,50 @@ class AuditTests(unittest.TestCase):
             self.assertEqual(report.verdict, "FAIL")
 
 
+def write_muse_skill(root, folder_name, yaml_text, body="# A Muse skill\n\nBe helpful.\n"):
+    folder = write_skill(root, folder_name, body)
+    with open(os.path.join(folder, "skill.yaml"), "w", encoding="utf-8") as fh:
+        fh.write(yaml_text)
+    return folder
+
+
+class MuseFormatTests(unittest.TestCase):
+    def test_muse_skill_audits_without_frontmatter_error(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            folder = write_muse_skill(
+                tmp, "morning_brief",
+                'name: morning_brief\ntitle: "Morning Brief"\ndescription: "Prepares a short morning briefing."\ncategory: "Work and knowledge"\ninclude_in_prompt: false\n',
+            )
+            report = sd.audit_skill(folder, "test")
+            self.assertEqual(report.verdict, "OK")
+            self.assertEqual(report.name, "morning_brief")
+            self.assertEqual(report.description, "Prepares a short morning briefing.")
+            messages = " ".join(f.message for f in report.findings)
+            self.assertNotIn("missing YAML frontmatter", messages)
+
+    def test_muse_skill_name_must_match_folder(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            folder = write_muse_skill(
+                tmp, "morning_brief",
+                "name: other_skill\ndescription: A skill whose name points elsewhere.\n",
+            )
+            report = sd.audit_skill(folder, "test")
+            self.assertEqual(report.verdict, "FAIL")
+            messages = " ".join(f.message for f in report.findings)
+            self.assertIn("does not match its folder", messages)
+
+    def test_muse_skill_name_must_be_snake_case(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            folder = write_muse_skill(
+                tmp, "note-taker",
+                "name: note-taker\ndescription: Takes tidy notes.\n",
+            )
+            report = sd.audit_skill(folder, "test")
+            self.assertEqual(report.verdict, "FAIL")
+            messages = " ".join(f.message for f in report.findings)
+            self.assertIn("name is not snake_case: note-taker", messages)
+
+
 class ConflictTests(unittest.TestCase):
     def test_duplicate_names_are_flagged(self):
         with tempfile.TemporaryDirectory() as tmp:

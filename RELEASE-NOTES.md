@@ -1,3 +1,7 @@
+## v0.3.7
+
+SkillDoctor now recognizes Muse skills. A Muse skill keeps its metadata in a skill.yaml file beside the SKILL.md, with no frontmatter by design, and the auditor used to fail every one of them for that missing block. It now reads the skill.yaml, takes the name and description from there, validates the name as snake_case, and runs the full security checks on the body as before. Claude format skills are audited exactly as they were.
+
 ## v0.3.5
 
 The PyPI page shows the pictures now: the README images point at absolute addresses that PyPI can load, instead of relative ones only GitHub could resolve.

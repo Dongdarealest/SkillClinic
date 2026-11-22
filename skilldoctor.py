@@ -37,7 +37,7 @@ import shutil
 import sys
 from datetime import datetime
 
-VERSION = "0.3.6"
+VERSION = "0.3.7"
 
 DEFAULT_LOCATIONS = [
     "~/.claude/skills",
@@ -48,6 +48,7 @@ DEFAULT_LOCATIONS = [
 
 REQUIRED_FIELDS = ("name", "description")
 KEBAB_RE = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")
+SNAKE_RE = re.compile(r"^[a-z0-9]+(_[a-z0-9]+)*$")
 
 # ---------------------------------------------------------------------------
 # Security patterns. Each entry: (compiled regex, severity, label).
@@ -154,6 +155,41 @@ def parse_frontmatter(text):
     return fields, body, None
 
 
+def parse_skill_yaml(folder):
+    """Return a fields dict from a sibling skill.yaml, or None.
+
+    Muse skills keep their metadata in a skill.yaml file beside the
+    SKILL.md instead of in frontmatter. The file is flat "key: value"
+    lines, parsed with the same lenient rules as frontmatter.
+    """
+    path = os.path.join(folder, "skill.yaml")
+    if not os.path.isfile(path):
+        return None
+    try:
+        with open(path, "r", encoding="utf-8", errors="replace") as fh:
+            text = fh.read()
+    except OSError:
+        return None
+    fields = {}
+    for raw in text.splitlines():
+        line = raw.rstrip()
+        if not line.strip() or line.lstrip().startswith("#"):
+            continue
+        if line[0] in (" ", "\t"):
+            continue  # nested content belongs to the previous key
+        if ":" not in line:
+            continue
+        key, _, value = line.partition(":")
+        key = key.strip()
+        value = value.strip()
+        if len(value) >= 2 and value[0] == value[-1] and value[0] in ("'", '"'):
+            value = value[1:-1]
+        if not key:
+            continue
+        fields[key] = value
+    return fields or None
+
+
 def estimate_tokens(text):
     """Rough token estimate: four characters per token."""
     if not text:
@@ -246,6 +282,14 @@ def audit_skill(folder, host):
 
     report.tokens = estimate_tokens(text)
     fields, body, error = parse_frontmatter(text)
+    muse_format = False
+    if error == "missing YAML frontmatter block":
+        yaml_fields = parse_skill_yaml(folder)
+        if yaml_fields and yaml_fields.get("name") and yaml_fields.get("description"):
+            fields = yaml_fields
+            body = text
+            error = None
+            muse_format = True
     if error:
         report.add("validity", "error", error)
         return report
@@ -259,7 +303,10 @@ def audit_skill(folder, host):
     report.description = fields.get("description", "")
 
     if name:
-        if not KEBAB_RE.match(name):
+        if muse_format:
+            if not SNAKE_RE.match(name):
+                report.add("validity", "error", "name is not snake_case: %s" % name)
+        elif not KEBAB_RE.match(name):
             report.add("validity", "error", "name is not kebab-case: %s" % name)
         folder_name = os.path.basename(os.path.normpath(folder))
         if name != folder_name:
@@ -356,6 +403,7 @@ HINTS = [
     ("missing required field: name", "Add the skill name to the frontmatter."),
     ("missing YAML frontmatter", "Add a frontmatter block between --- markers at the very top of the file."),
     ("not kebab-case", "Rename the skill with lowercase words joined by hyphens."),
+    ("not snake_case", "Rename the skill with lowercase words joined by underscores."),
     ("does not match its folder", "Rename the folder or the name field so the two are identical."),
     ("cannot read SKILL.md", "Check the file exists and is readable plain text."),
     ("pipes a network download", "Never pipe a download into a shell. Download the file, read it, then decide whether to run it."),
