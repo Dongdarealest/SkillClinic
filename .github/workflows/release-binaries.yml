@@ -35,3 +35,15 @@ jobs:
         run: |
           if [ -f dist/skilldoctor.exe ]; then mv dist/skilldoctor.exe "${{ matrix.name }}"; else mv dist/skilldoctor "${{ matrix.name }}"; fi
           gh release upload "${{ github.event.release.tag_name }}" "${{ matrix.name }}"
+
+  attach-source:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Attach the installer payload and its checksum
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release upload "${{ github.event.release.tag_name }}" skilldoctor.py skilldoctor.py.sha256

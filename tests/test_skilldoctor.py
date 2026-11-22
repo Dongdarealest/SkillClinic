@@ -458,3 +458,132 @@ class PluginCacheConflictTests(unittest.TestCase):
             self.assertEqual(len(reports), 2)
             for r in reports:
                 self.assertFalse(any(f.kind == "conflict" for f in r.findings))
+
+
+class DistributionCopyConflictTests(unittest.TestCase):
+    BODY = "---\nname: packed\ndescription: A skill shipped in a pack.\n---\n\nBody.\n"
+
+    def test_source_and_target_copies_in_one_pack_are_not_a_conflict(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            pack = os.path.join(tmp, "packs", "demo-pack")
+            write_skill(os.path.join(pack, "skills"), "packed", self.BODY)
+            write_skill(os.path.join(pack, "for-claude"), "packed", self.BODY)
+            write_skill(os.path.join(pack, "for-cursor"), "packed", self.BODY)
+            reports = sd.scan([tmp])
+            self.assertEqual(len(reports), 3)
+            for r in reports:
+                self.assertFalse(any(f.kind == "conflict" for f in r.findings))
+                self.assertEqual(r.verdict, "OK")
+
+    def test_examples_copy_in_one_tree_is_not_a_conflict(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            write_skill(os.path.join(tmp, "examples"), "packed", self.BODY)
+            write_skill(os.path.join(tmp, "packs", "demo-pack", "skills"), "packed", self.BODY)
+            reports = sd.scan([tmp])
+            self.assertEqual(len(reports), 2)
+            for r in reports:
+                self.assertFalse(any(f.kind == "conflict" for f in r.findings))
+
+    def test_plain_duplicates_in_ordinary_folders_still_flag(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            write_skill(os.path.join(tmp, "folder-a"), "packed", self.BODY)
+            write_skill(os.path.join(tmp, "folder-b"), "packed", self.BODY)
+            reports = sd.scan([tmp])
+            self.assertEqual(len(reports), 2)
+            for r in reports:
+                self.assertTrue(any(f.kind == "conflict" for f in r.findings))
+
+    def test_same_name_in_two_collections_still_flags(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            write_skill(os.path.join(tmp, "collection-a", "skills"), "packed", self.BODY)
+            write_skill(os.path.join(tmp, "collection-b", "skills"), "packed", self.BODY)
+            reports = sd.scan([tmp])
+            self.assertEqual(len(reports), 2)
+            for r in reports:
+                self.assertTrue(any(f.kind == "conflict" for f in r.findings))
+
+
+class TemplateSkipTests(unittest.TestCase):
+    def test_template_folder_is_not_audited(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            write_skill(
+                tmp, "template",
+                "---\nname: your-skill-name\ndescription: A placeholder.\n---\n\nBody.\n",
+            )
+            write_skill(
+                tmp, "real-skill",
+                "---\nname: real-skill\ndescription: A real skill.\n---\n\nBody.\n",
+            )
+            reports = sd.scan([tmp])
+            self.assertEqual([r.name for r in reports], ["real-skill"])
+
+
+class BadgeTests(unittest.TestCase):
+    def write_clean(self, root):
+        return write_skill(
+            root, "tidy",
+            "---\nname: tidy\ndescription: Keeps things tidy.\n---\n\nTidy.\n",
+        )
+
+    def test_personalized_badge_svg_contains_score_and_month(self):
+        svg = sd.badge_svg(score=92, month="NOV 2026")
+        self.assertIn("92", svg)
+        self.assertIn("NOV 2026", svg)
+        self.assertIn('width="256"', svg)
+
+    def test_generic_badge_svg_is_the_plain_mark(self):
+        svg = sd.badge_svg()
+        self.assertIn('width="176"', svg)
+        self.assertIn("SKILLDOCTOR", svg)
+
+    def test_personalized_plaque_svg_contains_score_line(self):
+        svg = sd.plaque_svg("Health 92 / 100", "3 skills · 0 failures · November 2026")
+        self.assertIn("Health 92 / 100", svg)
+        self.assertIn("SKILLDOCTOR AUDITED", svg)
+        self.assertIn('width="560"', svg)
+
+    def test_write_badge_on_pass_writes_badge_plaque_and_report(self):
+        import json as json_module
+        with tempfile.TemporaryDirectory() as tmp:
+            self.write_clean(tmp)
+            self.assertEqual(sd.main([tmp, "--write-badge"]), 0)
+            badge_path = os.path.join(tmp, "skilldoctor-badge.svg")
+            plaque_path = os.path.join(tmp, "skilldoctor-plaque.svg")
+            report_path = os.path.join(tmp, "skilldoctor-report.json")
+            for path in (badge_path, plaque_path, report_path):
+                self.assertTrue(os.path.exists(path), path)
+            with open(badge_path, encoding="utf-8") as fh:
+                badge = fh.read()
+            self.assertIn("100", badge)
+            with open(plaque_path, encoding="utf-8") as fh:
+                plaque = fh.read()
+            self.assertIn("Health 100 / 100", plaque)
+            self.assertIn("1 skills · 0 failures", plaque)
+            with open(report_path, encoding="utf-8") as fh:
+                payload = json_module.load(fh)
+            self.assertEqual(payload["version"], sd.VERSION)
+            self.assertIn("audit_date", payload)
+            self.assertEqual(payload["health_score"], 100)
+            self.assertEqual(payload["summary"], {"total": 1, "ok": 1, "warn": 0, "fail": 0})
+            skill = payload["skills"][0]
+            self.assertTrue(skill["content_hash"])
+            with open(os.path.join(tmp, "tidy", "SKILL.md"), "rb") as fh:
+                import hashlib
+                expected = hashlib.sha256(fh.read().decode("utf-8").encode("utf-8", "replace")).hexdigest()
+            self.assertEqual(skill["content_hash"], expected)
+
+    def test_write_badge_on_fail_writes_nothing(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            write_skill(tmp, "broken", "---\nname: Wrong_Name\n---\n\nNo description.\n")
+            self.assertEqual(sd.main([tmp, "--write-badge"]), 1)
+            for name in ("skilldoctor-badge.svg", "skilldoctor-plaque.svg", "skilldoctor-report.json"):
+                self.assertFalse(os.path.exists(os.path.join(tmp, name)), name)
+
+    def test_pass_block_appears_only_on_a_passing_audit(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.write_clean(tmp)
+            text = sd.render_text(sd.scan([tmp]), [tmp])
+            self.assertIn("Badge earned", text)
+            self.assertIn("registry", text)
+        failing = sd.render_text(sd.scan([EXAMPLES]), [EXAMPLES])
+        self.assertNotIn("Badge earned", failing)
