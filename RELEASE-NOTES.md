@@ -1,3 +1,7 @@
+## v0.1.1
+
+The README learned to show, not just tell: a designed masthead, and a picture of the real demo output near the top so a visitor sees the verdicts before reading a word of explanation.
+
 # Release Notes
 
 ## v0.1.0 (2026-11-22)
