@@ -28,23 +28,31 @@ Skills are instructions your AI loads and follows, often at the start of every c
 
 ## Quick start
 
-Python 3.8 or newer, nothing to install.
+One line installs a `skilldoctor` command on your machine:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Dongdarealest/skilldoctor/main/install.sh | bash
+```
+
+On Windows, in PowerShell: `irm https://raw.githubusercontent.com/Dongdarealest/skilldoctor/main/install.ps1 | iex`
+
+Then it is just:
 
 ```bash
 # Audit the skill folders on this machine
-python3 skilldoctor.py
+skilldoctor
 
 # See it work in ten seconds on the bundled examples
-python3 skilldoctor.py --demo
+skilldoctor --demo
 
 # Audit a specific folder
-python3 skilldoctor.py ~/path/to/skills
+skilldoctor ~/path/to/skills
 
 # Machine readable output for scripts and CI
-python3 skilldoctor.py --json
+skilldoctor --json
 ```
 
-SkillDoctor looks in `~/.claude/skills`, `~/.cursor/skills`, `~/.codex/skills`, and `~/.config/claude/skills` when they exist. Auditing reads files and changes nothing.
+No installer fan? The whole tool is one file: download `skilldoctor.py` from this repo and run `python3 skilldoctor.py` the same way. It needs Python 3.8 or newer and nothing else.
 
 ## Reading the report
 
@@ -58,13 +66,13 @@ Finding a bad skill is only half the job, so SkillDoctor can clear it out too. R
 
 ```bash
 # Audit, then move every FAIL skill out of its host folder
-python3 skilldoctor.py --quarantine-failed
+skilldoctor --quarantine-failed
 
 # The same, with no confirmation prompt, for scripts
-python3 skilldoctor.py --quarantine-failed --yes
+skilldoctor --quarantine-failed --yes
 
 # Changed your mind? Put the last batch back
-python3 skilldoctor.py --restore
+skilldoctor --restore
 ```
 
 Nothing is deleted outright. Failed skills move to `~/.skilldoctor/quarantine` in a dated batch with a manifest of where each one came from, and `--restore` puts the most recent batch back exactly where it was. Only FAIL verdicts are moved; a WARN is a judgment call, and judgment calls stay yours.
@@ -89,7 +97,7 @@ This repo doubles as a GitHub Action, so a collection can audit itself on every 
 - uses: Dongdarealest/skilldoctor@v0.2.1
 ```
 
-It fails the build when any skill fails the audit. Anywhere else, the plain command does the same job in CI: `python3 skilldoctor.py --json` for machines, exit code 1 on any FAIL.
+It fails the build when any skill fails the audit. Anywhere else, the plain command does the same job in CI: `skilldoctor --json` for machines, exit code 1 on any FAIL.
 
 ## Why this exists
 
