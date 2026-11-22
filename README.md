@@ -8,13 +8,14 @@
   <img src="https://img.shields.io/badge/python-3.10%2B-141414?style=flat-square" alt="Python 3.10 or newer">
   <img src="https://img.shields.io/badge/dependencies-zero-141414?style=flat-square" alt="Zero dependencies">
   <img src="https://visitor-badge.laobi.icu/badge?page_id=Dongdarealest.skilldoctor" alt="Visitors">
+  <a href="https://dongdarealest.github.io/skilldoctor/"><img src="https://skilldoctor-badges.vercel.app/badges/Dongdarealest--skilldoctor.svg" alt="Audited by SkillDoctor"></a>
 </p>
 
 <p align="center">
-  <a href="https://github.com/Dongdarealest/skilldoctor/blob/main/REGISTRY.md"><img src="https://raw.githubusercontent.com/Dongdarealest/skilldoctor/main/assets/audited-plaque.svg" alt="The SkillDoctor audited plaque: the mark of a checked skill" width="560"></a>
+  <a href="https://dongdarealest.github.io/skilldoctor/"><img src="https://skilldoctor-badges.vercel.app/badges/Dongdarealest--skilldoctor-plaque.svg" alt="SkillDoctor audited plaque: no skills to audit, this repo carries demo fixtures only" width="560"></a>
 </p>
 
-Projects that pass the audit earn this plaque and the badge further down. The picture alone proves nothing, and anyone can paste one: the proof is the entry in the registry, kept live at [dongdarealest.github.io/skilldoctor](https://dongdarealest.github.io/skilldoctor/) and described in [REGISTRY.md](REGISTRY.md). Listings are added only after the maintainers re-run the audit and the results match, and a daily re-audit keeps every listed badge honest after that.
+Projects that pass the audit earn this plaque and the badge further down. The picture alone proves nothing, and anyone can paste one: the proof is the entry in the registry, kept live at [dongdarealest.github.io/skilldoctor](https://dongdarealest.github.io/skilldoctor/) and described in [REGISTRY.md](REGISTRY.md). Listings are added only after the maintainers re-run the audit and the results match, and a daily re-audit keeps every listed badge honest after that. This repo wears its own plaque above, and it does not flatter itself: SkillDoctor carries no skills of its own, only the demo fixtures under `examples/`, so its plaque shows the no skills state, and those fixtures are listed as not audited in every report rather than scored.
 
 Skills are instructions your AI loads and follows, often at the start of every conversation. Most people install them from repositories, gists, and chat messages without ever reading them. SkillDoctor reads them for you: one command audits every skill on your machine and gives each one a verdict.
 
@@ -74,6 +75,7 @@ No installer fan? The whole tool is one file: download `skilldoctor.py` from thi
 | Security | Downloads piped into a shell, instructions touching credential stores, language that sends user data out, prompt override phrases, uninspectable base64 blobs, destructive commands, invisible Unicode characters, and the same patterns in the text files bundled with a skill |
 | Conflicts | The same skill name installed in several host folders, near-duplicate descriptions that make hosts load the wrong skill. Skills namespaced inside a plugin, and the distribution copies inside one collection, are not conflicts |
 | Token cost | Always-on tokens (the name and description a host loads into every conversation) counted apart from body tokens, which load only when a skill runs |
+| Sample data | Skills found under `examples/`, `fixtures/` or `testdata/` folders are exhibits, not installations: they are listed in the report as not audited and are never scored, given a verdict, or entered into the conflict checks |
 
 ## Reading the report
 
@@ -147,7 +149,7 @@ The image alone still proves nothing, and anyone can paste one. The proof is the
 This repo doubles as a GitHub Action, so a collection can audit itself on every push:
 
 ```yaml
-- uses: Dongdarealest/skilldoctor@v0.4.1
+- uses: Dongdarealest/skilldoctor@v0.4.2
 ```
 
 It fails the build when any skill fails the audit. Anywhere else, the plain command does the same job in CI: `skilldoctor --json` for machines, exit code 1 on any FAIL.

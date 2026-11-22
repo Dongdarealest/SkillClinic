@@ -22,7 +22,10 @@ Each run of this script:
 
 A project whose latest audit passes wears its current score. A
 project whose latest audit fails, or that cannot be cloned or
-audited, flips to the grey recheck design until it passes again.
+audited, flips to the grey recheck design until it passes again. A
+project with no auditable skills at all wears the neutral design:
+the standard gold frame saying there are no skills to audit, with
+no score. Sample data is never scored, here or anywhere else.
 
 Run by hand with
 
@@ -87,38 +90,55 @@ FONT = sd.BADGE_FONT
 
 def audit_local(audit_root):
     """Audit one local folder and return the machine readable payload."""
-    reports = sd.scan([audit_root])
-    return sd.build_payload(reports, [audit_root])
+    reports, samples = sd.scan_all([audit_root])
+    return sd.build_payload(reports, [audit_root], samples)
 
 
 def summarize(payload):
     """Fold one audit payload into a project status.
 
-    Current means every audited skill passes. Anything else, a failing
-    skill or no skills found at all, is a recheck.
+    Three states. Current: at least one scored skill and none fail,
+    so the project wears its score. Neutral: zero scored skills, the
+    project carries no auditable skills at all (sample data under
+    examples/, fixtures/ or testdata/ folders is listed as not
+    audited and never counts), so it wears the plain design with no
+    score. Recheck: scored skills with failures, so an old score is
+    never silently kept. Every summary carries the state explicitly
+    alongside the status, and the count of unaudited samples.
     """
     summary = payload["summary"]
+    samples = payload.get("not_audited_samples") or []
     if summary["total"] == 0:
         return {
-            "status": "recheck",
+            "status": "neutral",
+            "state": "neutral",
             "score": None,
             "skills": 0,
             "failures": 0,
-            "note": "No skills found at the audit path.",
+            "samples": len(samples),
+            "note": (
+                "Sample data only, listed as not audited."
+                if samples
+                else "No skills found at the audit path."
+            ),
         }
     if summary["fail"] > 0:
         return {
             "status": "recheck",
+            "state": "recheck",
             "score": None,
             "skills": summary["total"],
             "failures": summary["fail"],
+            "samples": len(samples),
             "note": "%d skill(s) currently fail the audit." % summary["fail"],
         }
     return {
         "status": "current",
+        "state": "current",
         "score": payload["health_score"],
         "skills": summary["total"],
         "failures": 0,
+        "samples": len(samples),
         "note": None,
     }
 
@@ -306,9 +326,11 @@ def verify_local(project, checkout_dir, when=None):
     if not os.path.isdir(audit_root):
         entry.update(
             status="recheck",
+            state="recheck",
             score=None,
             skills=0,
             failures=0,
+            samples=0,
             note="The audit path %s was not found in the repo."
             % project["audit_path"],
         )
@@ -318,9 +340,11 @@ def verify_local(project, checkout_dir, when=None):
     except Exception as exc:  # an audit that blows up is a recheck
         summary = {
             "status": "recheck",
+            "state": "recheck",
             "score": None,
             "skills": 0,
             "failures": 0,
+            "samples": 0,
             "note": "The audit could not be completed: %s" % exc,
         }
     entry.update(summary)
@@ -348,9 +372,11 @@ def verify_project(project, workdir, when=None):
         entry = base_entry(project, when)
         entry.update(
             status="recheck",
+            state="recheck",
             score=None,
             skills=0,
             failures=0,
+            samples=0,
             note="The repo could not be cloned for this check.",
         )
         return entry
@@ -449,21 +475,83 @@ def generic_plaque_svg():
     )
 
 
+def neutral_badge_svg():
+    """The small badge in its neutral state: the standard gold design,
+    its segment reading NO SKILLS instead of a score. Same geometry as
+    the personalized badge the tool writes, so the endpoint port of
+    this design renders byte for byte the same image."""
+    return (
+        '<svg xmlns="http://www.w3.org/2000/svg" width="256" height="28" '
+        'viewBox="0 0 256 28">'
+        '<rect width="256" height="28" rx="6" fill="%s" stroke="%s"/>'
+        '<polyline points="10,14 19,14 23,6 28,22 32,14 43,14" fill="none" '
+        'stroke="%s" stroke-width="2" stroke-linejoin="round" '
+        'stroke-linecap="round"/>'
+        '<line x1="52" y1="6" x2="52" y2="22" stroke="%s" stroke-width="1"/>'
+        '<text x="62" y="11" font-family="%s" font-size="7.5" '
+        'letter-spacing="1.5" fill="%s">AUDITED BY</text>'
+        '<text x="62" y="23" font-family="%s" font-size="10.5" '
+        'font-weight="600" fill="%s">SKILLDOCTOR</text>'
+        '<line x1="150" y1="6" x2="150" y2="22" stroke="%s" stroke-width="1"/>'
+        '<text x="162" y="18" font-family="%s" font-size="10" '
+        'fill="%s">NO SKILLS</text>'
+        "</svg>"
+        % (
+            INK,
+            EDGE,
+            GOLD,
+            DIVIDER,
+            FONT,
+            MUTED,
+            FONT,
+            BONE,
+            DIVIDER,
+            FONT,
+            GOLD,
+        )
+    )
+
+
+def neutral_plaque_svg(entry):
+    """The large plaque in its neutral state: the standard gold design
+    saying there is nothing to audit, and why."""
+    if entry.get("samples"):
+        sub_line = "Sample fixtures only, listed as not audited."
+    else:
+        sub_line = "No skills found in this repo."
+    return sd.plaque_svg("No skills to audit", sub_line)
+
+
+def entry_state(entry):
+    """The registry state of an entry: current, neutral or recheck.
+
+    Entries carry the state explicitly; the status field predates the
+    neutral state, so older entries without a state fall back to it.
+    """
+    return entry.get("state") or entry.get("status")
+
+
 def badge_for(entry, when):
-    if entry["status"] == "current":
+    state = entry_state(entry)
+    if state == "current":
         return sd.badge_svg(
             score=entry["score"], month=when.strftime("%b %Y").upper()
         )
+    if state == "neutral":
+        return neutral_badge_svg()
     return recheck_badge_svg()
 
 
 def plaque_for(entry, when):
-    if entry["status"] == "current":
+    state = entry_state(entry)
+    if state == "current":
         sub_line = "%d skills · 0 failures · %s" % (
             entry["skills"],
             when.strftime("%B %Y"),
         )
         return sd.plaque_svg("Health %d / 100" % entry["score"], sub_line)
+    if state == "neutral":
+        return neutral_plaque_svg(entry)
     return recheck_plaque_svg(when)
 
 
@@ -521,6 +609,7 @@ h2 { font-size: 20px; margin: 0 0 10px; font-weight: 600; }
   letter-spacing: 1.5px; text-transform: uppercase; margin-right: 10px;
 }
 .pill.recheck { border-color: #8A8680; color: #8A8680; }
+.pill.neutral { border-color: #F2EFE9; color: #F2EFE9; }
 .note { color: #8A8680; font-size: 14px; margin: 0 0 12px; }
 details { font-size: 13px; color: #8A8680; }
 details summary { cursor: pointer; color: #C9A35F; }
@@ -650,6 +739,7 @@ HONESTY_HTML = """
   <h2>The honest part</h2>
   <p><strong>The picture alone proves nothing.</strong> Anyone can copy an image into a README, so the proof is the entry on this page, generated by the registry itself from its own audit. A badge that is not listed here is just a picture.</p>
   <p>Entries are re-verified daily, so a score on this page is the latest result, not a lifetime grade. A project that stops passing shows the recheck design until it passes again. And until a repo is first audited, its address shows a pending design: never a broken image, and never a score it has not earned.</p>
+  <p>A project that carries no auditable skills at all is listed as <strong>No skills</strong>, in the plain gold design with no score: sample data under examples, fixtures or testdata folders is listed as not audited and never counts toward one. Wearing the badge is not itself a result.</p>
   <p>Taking the badge address out of a README removes the listing at the next run, and discovery of a brand new badge can take some hours, because GitHub code search indexing lags behind.</p>
 </section>
 """
@@ -717,13 +807,16 @@ def render_project(entry):
     plaque = html.escape(entry["plaque"])
     badge_url = "%s%s.svg" % (BADGE_BASE_URL, entry["slug"])
     plaque_url = "%s%s-plaque.svg" % (BADGE_BASE_URL, entry["slug"])
-    if entry["status"] == "current":
+    if entry_state(entry) == "current":
         pill = '<span class="pill">Current</span>'
         stats = "Health %d of 100 · %d skills · Verified %s" % (
             entry["score"],
             entry["skills"],
             entry["verified"],
         )
+    elif entry_state(entry) == "neutral":
+        pill = '<span class="pill neutral">No skills</span>'
+        stats = "No auditable skills · Verified %s" % entry["verified"]
     else:
         pill = '<span class="pill recheck">Recheck needed</span>'
         stats = "Last checked %s" % entry["verified"]
