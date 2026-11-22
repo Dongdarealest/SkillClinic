@@ -1,3 +1,7 @@
+## v0.3.5
+
+The PyPI page shows the pictures now: the README images point at absolute addresses that PyPI can load, instead of relative ones only GitHub could resolve.
+
 ## v0.3.4
 
 SkillDoctor is on PyPI as skillcheckup: pip install skillcheckup, then run the skilldoctor command. Publishing now runs through PyPI trusted publishing from this repo's release workflow, with no stored token anywhere.
