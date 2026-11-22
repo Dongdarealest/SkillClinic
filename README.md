@@ -24,7 +24,7 @@ Skills are instructions your AI loads and follows, often at the start of every c
 With Python already set up, the familiar way works too:
 
 ```bash
-pip install skilldoctor
+pip install skillcheckup
 ```
 
 One line installs a `skilldoctor` command on your machine:
