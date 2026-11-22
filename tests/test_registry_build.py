@@ -169,6 +169,35 @@ class ParseIdentitiesTests(unittest.TestCase):
         found = rb.parse_identities(texts)
         self.assertEqual(found, {("bob", "my-cool.tools"): ("Bob", "my-cool.tools")})
 
+    def test_reads_owner_and_repo_out_of_endpoint_urls(self):
+        texts = [
+            "[![Audited by SkillDoctor](https://skilldoctor-badges.vercel.app/badges/Dongdarealest--sdsc-community-api.svg)](https://dongdarealest.github.io/skilldoctor/)",
+            '<img src="https://skilldoctor-badges.vercel.app/badges/Dongdarealest--sdsc-community-api-plaque.svg">',
+        ]
+        found = rb.parse_identities(texts)
+        self.assertEqual(
+            found,
+            {("dongdarealest", "sdsc-community-api"): ("Dongdarealest", "sdsc-community-api")},
+        )
+
+    def test_the_plain_endpoint_marks_enroll_nothing(self):
+        texts = [
+            "https://skilldoctor-badges.vercel.app/badges/audited.svg",
+            "https://skilldoctor-badges.vercel.app/badges/audited-plaque.svg",
+        ]
+        self.assertEqual(rb.parse_identities(texts), {})
+
+    def test_both_address_forms_can_mix(self):
+        texts = [
+            "https://skilldoctor-badges.vercel.app/badges/Carol--kit.svg",
+            "https://dongdarealest.github.io/skilldoctor/badges/Alice--tools.svg",
+        ]
+        found = rb.parse_identities(texts)
+        self.assertEqual(
+            found,
+            {("carol", "kit"): ("Carol", "kit"), ("alice", "tools"): ("Alice", "tools")},
+        )
+
 
 class ReconcileTests(unittest.TestCase):
     def setUp(self):
@@ -227,6 +256,18 @@ class ReconcileTests(unittest.TestCase):
         )
         self.assertEqual(found, {("carol", "kit"): ("Carol", "kit")})
 
+    def test_discovery_finds_endpoint_snippets(self):
+        found = rb.discover_identities(
+            "tok",
+            search_fn=lambda: [
+                "see https://skilldoctor-badges.vercel.app/badges/Dongdarealest--sdsc-community-api.svg here",
+            ],
+        )
+        self.assertEqual(
+            found,
+            {("dongdarealest", "sdsc-community-api"): ("Dongdarealest", "sdsc-community-api")},
+        )
+
 
 class ImageTests(unittest.TestCase):
     def test_current_images_carry_the_score(self):
@@ -284,6 +325,97 @@ class WriteSiteTests(unittest.TestCase):
         self.assertIn('id="repo-go"', page)
         self.assertIn("Alice--tools.svg", page)
         self.assertIn("next daily verification", page)
+
+    def test_write_site_emits_the_generic_plaque(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            badges = os.path.join(tmp, "badges")
+            os.makedirs(badges)
+            with open(os.path.join(badges, "Gone--repo-plaque.svg"), "w") as fh:
+                fh.write("stale")
+            rb.write_site([self.entry()], WHEN, docs_dir=tmp)
+            plaque = os.path.join(badges, "audited-plaque.svg")
+            self.assertTrue(os.path.exists(plaque))
+            with open(plaque, encoding="utf-8") as fh:
+                self.assertEqual(fh.read().strip(), rb.generic_plaque_svg())
+            self.assertIn("The mark of a checked skill", rb.generic_plaque_svg())
+            self.assertFalse(
+                os.path.exists(os.path.join(badges, "Gone--repo-plaque.svg"))
+            )
+
+
+class PageContentTests(unittest.TestCase):
+    def entry(self, slug="Alice--tools", status="current", score=90):
+        return {
+            "slug": slug,
+            "name": "Alice/tools",
+            "repo": "https://github.com/Alice/tools",
+            "homepage": "https://github.com/Alice/tools",
+            "verified": "2026-11-22",
+            "badge": "badges/%s.svg" % slug,
+            "plaque": "badges/%s-plaque.svg" % slug,
+            "status": status,
+            "score": score,
+            "skills": 4,
+            "failures": 0,
+            "note": None,
+        }
+
+    def setUp(self):
+        self.page = rb.render_index([self.entry()], WHEN)
+
+    def test_hero_introduces_the_offer_with_the_generic_plaque(self):
+        self.assertIn("A live trust mark for AI skills", self.page)
+        self.assertIn("your score is always the true one", self.page)
+        self.assertIn(
+            "https://skilldoctor-badges.vercel.app/badges/audited-plaque.svg",
+            self.page,
+        )
+        self.assertIn("badges/audited-plaque.svg", self.page)
+
+    def test_generator_previews_point_at_the_endpoint(self):
+        self.assertIn('id="preview-badge"', self.page)
+        self.assertIn('id="preview-plaque"', self.page)
+        self.assertIn("never a broken image", self.page)
+        self.assertIn("pending design", self.page)
+
+    def test_snippets_use_the_endpoint_base(self):
+        self.assertIn(rb.BADGE_BASE_URL, self.page)
+        self.assertIn(
+            "https://skilldoctor-badges.vercel.app/badges/Alice--tools.svg",
+            self.page,
+        )
+        self.assertIn(
+            "https://skilldoctor-badges.vercel.app/badges/Alice--tools-plaque.svg",
+            self.page,
+        )
+        self.assertNotIn("__BADGE_BASE_URL__", self.page)
+
+    def test_how_it_works_has_three_steps(self):
+        self.assertIn("How it works", self.page)
+        self.assertIn("Get your personal link", self.page)
+        self.assertIn("Paste it into your README", self.page)
+        self.assertIn("Get audited every day", self.page)
+
+    def test_what_the_audit_checks_is_listed(self):
+        self.assertIn("What the audit checks", self.page)
+        self.assertIn("Validity and spec limits", self.page)
+        self.assertIn("hidden Unicode", self.page)
+        self.assertIn("Bundled files", self.page)
+        self.assertIn("always-on", self.page)
+        self.assertIn("AUDIT.md", self.page)
+        self.assertIn("REGISTRY.md", self.page)
+
+    def test_examples_render_the_live_plaque_with_facts(self):
+        self.assertIn("Verified entries", self.page)
+        self.assertIn("Alice/tools", self.page)
+        self.assertIn("Health 90 of 100", self.page)
+        self.assertIn("Verified 2026-11-22", self.page)
+
+    def test_honesty_block_states_the_limits(self):
+        self.assertIn("The picture alone proves nothing", self.page)
+        self.assertIn("re-verified daily", self.page)
+        self.assertIn("removes the listing", self.page)
+        self.assertIn("code search indexing lags", self.page)
 
 
 if __name__ == "__main__":

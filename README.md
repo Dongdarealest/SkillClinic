@@ -109,28 +109,28 @@ Publish skills of your own? When your collection passes a SkillDoctor audit, it 
 Your badge address carries your own GitHub identity, and nobody issues it to you:
 
 ```
-https://dongdarealest.github.io/skilldoctor/badges/<owner>--<repo>.svg
+https://skilldoctor-badges.vercel.app/badges/<owner>--<repo>.svg
 ```
 
 Build it from your owner and repo names, or let the generator on the [registry page](https://dongdarealest.github.io/skilldoctor/) build the ready to paste snippet for you. Paste it into your README:
 
 ```markdown
-[![Audited by SkillDoctor](https://dongdarealest.github.io/skilldoctor/badges/<owner>--<repo>.svg)](https://dongdarealest.github.io/skilldoctor/)
+[![Audited by SkillDoctor](https://skilldoctor-badges.vercel.app/badges/<owner>--<repo>.svg)](https://dongdarealest.github.io/skilldoctor/)
 ```
 
-That paste is the whole enrollment. A scheduled job searches GitHub every day for the badge address, reads the owner and repo out of the address itself, audits that repo, and lists it in the registry with its real score. The image is served from the registry site and regenerated from the latest audit: keep passing and it shows your current score; stop passing and it flips to a grey recheck plaque until the project passes again. Take the badge out of your README and the listing is dropped on the next run, images and all. Discovery rides on GitHub code search indexing, so a brand new badge can take some hours to be found; the badge activates at the next daily verification run after that.
+That paste is the whole enrollment. A scheduled job searches GitHub every day for the badge address, reads the owner and repo out of the address itself, audits that repo, and lists it in the registry with its real score. The badge address answers from the moment it is pasted, showing a pending design until the first verification, so it never renders as a broken image. From then on the same address serves the latest audit: keep passing and it shows your current score; stop passing and it flips to a grey recheck plaque until the project passes again. Take the badge out of your README and the listing is dropped on the next run, images and all. Discovery rides on GitHub code search indexing, so a brand new badge can take some hours to be found; the score itself arrives at the next daily verification run after that.
 
 For a place of honor, the same address with `-plaque` before `.svg` gives the large format:
 
 ```html
-<a href="https://dongdarealest.github.io/skilldoctor/"><img src="https://dongdarealest.github.io/skilldoctor/badges/<owner>--<repo>-plaque.svg" alt="SkillDoctor audited plaque" width="560"></a>
+<a href="https://dongdarealest.github.io/skilldoctor/"><img src="https://skilldoctor-badges.vercel.app/badges/<owner>--<repo>-plaque.svg" alt="SkillDoctor audited plaque" width="560"></a>
 ```
 
 This is a real one, SkillPort's small badge, served live:
 
-[![Audited by SkillDoctor](https://dongdarealest.github.io/skilldoctor/badges/Dongdarealest--skillport.svg)](https://dongdarealest.github.io/skilldoctor/)
+[![Audited by SkillDoctor](https://skilldoctor-badges.vercel.app/badges/Dongdarealest--skillport.svg)](https://dongdarealest.github.io/skilldoctor/)
 
-The plain mark at [badges/audited.svg](https://dongdarealest.github.io/skilldoctor/badges/audited.svg) is there for anyone who just wants the symbol. It carries no score and enrolls nothing; only the personal address is an enrollment.
+The plain mark at [badges/audited.svg](https://skilldoctor-badges.vercel.app/badges/audited.svg) is there for anyone who just wants the symbol. It carries no score and enrolls nothing; only the personal address is an enrollment.
 
 The static route still exists, for announcements and offline use. One command writes a dated snapshot of the badge and the plaque, with the score and month on their faces, plus the machine report, into the audited folder:
 
@@ -147,7 +147,7 @@ The image alone still proves nothing, and anyone can paste one. The proof is the
 This repo doubles as a GitHub Action, so a collection can audit itself on every push:
 
 ```yaml
-- uses: Dongdarealest/skilldoctor@v0.4.0
+- uses: Dongdarealest/skilldoctor@v0.4.1
 ```
 
 It fails the build when any skill fails the audit. Anywhere else, the plain command does the same job in CI: `skilldoctor --json` for machines, exit code 1 on any FAIL.

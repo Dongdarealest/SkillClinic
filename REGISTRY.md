@@ -11,7 +11,7 @@ Anyone can paste a badge or a plaque image into a README, so the picture alone p
 Enrollment is one paste. Your badge address carries your own GitHub identity, and nobody issues it to you:
 
 ```
-https://dongdarealest.github.io/skilldoctor/badges/<owner>--<repo>.svg
+https://skilldoctor-badges.vercel.app/badges/<owner>--<repo>.svg
 ```
 
 Build it from your owner and repo names, or use the generator at the top of the [registry page](https://dongdarealest.github.io/skilldoctor/), which builds the ready to paste badge and plaque snippets from a repo name. Paste the snippet into your README. That is the whole enrollment; there is no submission step.
@@ -24,10 +24,11 @@ A scheduled workflow (`.github/workflows/registry-verify.yml`, running `tools/re
 
 One scoring rule applies to everyone: the score on the plaque is the health score the audit reports for the project's audit path, nothing else.
 
-Two honest delays. The badge activates at the next daily verification run after it is pasted, and GitHub code search indexing can delay discovery of a brand new badge by some hours. A badge pasted today is normally live tomorrow.
+One honest delay, and no broken images. The badge address answers from the moment it is pasted, showing a pending design until the first verification, so a README never renders a missing image. The score itself arrives at the next daily verification run, and GitHub code search indexing can delay discovery of a brand new badge by some hours. A badge pasted today normally shows its true score tomorrow.
 
 ## States, and leaving
 
+- **Pending**: the badge is pasted but the repo has not been audited yet. The address shows the pending design, with no score.
 - **Current**: the latest daily audit passes. The images show the current score, the skill count and the verification month.
 - **Recheck needed**: the latest daily audit fails, or the repo cannot be cloned or audited. The images flip to a grey recheck design with no score, and the registry entry says why. An old score is never silently kept: a project that stops passing stops showing it, and flips back the day it passes again.
 - **Dropped**: take the badge address out of your README and the next run removes the entry and its generated images. Projects listed by hand are removed the same way by the maintainers, on request.
@@ -46,7 +47,7 @@ The static files that `--write-badge` writes remain useful as a dated snapshot, 
 
 ## The plain mark
 
-The mark at `https://dongdarealest.github.io/skilldoctor/badges/audited.svg` is the plain SkillDoctor symbol. It carries no score, names no repo, and enrolls nothing. Only a personal address is an enrollment.
+The mark at `https://skilldoctor-badges.vercel.app/badges/audited.svg` is the plain SkillDoctor symbol. It carries no score, names no repo, and enrolls nothing. Only a personal address is an enrollment.
 
 ## Verified entries
 
