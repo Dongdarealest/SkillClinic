@@ -37,7 +37,7 @@ import shutil
 import sys
 from datetime import datetime
 
-VERSION = "0.2.0"
+VERSION = "0.3.0"
 
 DEFAULT_LOCATIONS = [
     "~/.claude/skills",
@@ -178,7 +178,11 @@ class Finding:
         self.message = message
 
     def to_dict(self):
-        return {"kind": self.kind, "severity": self.severity, "message": self.message}
+        out = {"kind": self.kind, "severity": self.severity, "message": self.message}
+        hint = hint_for(self.message)
+        if hint:
+            out["fix"] = hint
+        return out
 
 
 class SkillReport:
@@ -193,6 +197,20 @@ class SkillReport:
 
     def add(self, kind, severity, message):
         self.findings.append(Finding(kind, severity, message))
+
+    @property
+    def score(self):
+        points = 100
+        for f in self.findings:
+            if f.severity in ("error", "high"):
+                points -= 25
+            elif f.severity == "warn":
+                points -= 8
+        return max(0, points)
+
+    @property
+    def grade(self):
+        return grade_for(self.score)
 
     @property
     def verdict(self):
@@ -211,6 +229,8 @@ class SkillReport:
             "path": self.path,
             "tokens": self.tokens,
             "verdict": self.verdict,
+            "score": self.score,
+            "grade": self.grade,
             "findings": [f.to_dict() for f in self.findings],
         }
 
@@ -318,6 +338,45 @@ def apply_conflict_checks(reports):
                 )
 
 
+def grade_for(score):
+    if score >= 90:
+        return "A"
+    if score >= 75:
+        return "B"
+    if score >= 60:
+        return "C"
+    if score >= 40:
+        return "D"
+    return "F"
+
+
+HINTS = [
+    ("missing required field: description", "Add a one line description to the frontmatter that says what the skill does and when to use it."),
+    ("missing required field: name", "Add the skill name to the frontmatter."),
+    ("missing YAML frontmatter", "Add a frontmatter block between --- markers at the very top of the file."),
+    ("not kebab-case", "Rename the skill with lowercase words joined by hyphens."),
+    ("does not match its folder", "Rename the folder or the name field so the two are identical."),
+    ("cannot read SKILL.md", "Check the file exists and is readable plain text."),
+    ("pipes a network download", "Never pipe a download into a shell. Download the file, read it, then decide whether to run it."),
+    ("ignore its previous instructions", "Delete the override language. A skill should never outrank the host that runs it."),
+    ("sending user data to an external destination", "Remove the send instruction, or name the destination plainly and let the user decide each time."),
+    ("reading or sending credential material", "Remove the credential access. A skill should ask the user, never read secret stores."),
+    ("references a credential store", "If the skill truly needs a credential, have it ask the user at run time instead of reading the store."),
+    ("mentions API keys, tokens, or passwords", "Move secrets out of the skill file and into environment variables the user controls."),
+    ("long base64 blob", "Decode the blob and keep the skill readable as plain text a human can inspect."),
+    ("destructive or elevated shell commands", "Remove the destructive command, or gate it behind an explicit confirmation from the user."),
+    ("is installed in", "Keep one copy of the skill and remove the duplicates, so the host always loads the one you audited."),
+    ("near duplicate", "Sharpen the description so it names what only this skill does."),
+]
+
+
+def hint_for(message):
+    for needle, hint in HINTS:
+        if needle in message:
+            return hint
+    return None
+
+
 def scan(roots):
     reports = []
     seen = set()
@@ -359,8 +418,12 @@ def render_text(reports, roots):
         lines.append("%s  %s" % (r.verdict.ljust(4), title))
         lines.append("      folder: %s" % display_path(r.folder))
         lines.append("      tokens: ~%d" % r.tokens)
+        lines.append("      score: %d (%s)" % (r.score, r.grade))
         for f in r.findings:
             lines.append("      - [%s] %s" % (f.severity, f.message))
+            hint = hint_for(f.message)
+            if hint:
+                lines.append("        fix: %s" % hint)
         lines.append("")
     lines.append(
         "Summary: %d skills, %d OK, %d WARN, %d FAIL"
@@ -370,6 +433,8 @@ def render_text(reports, roots):
         "Always-on token cost: ~%d tokens loaded into every conversation"
         % total_tokens
     )
+    health = round(sum(r.score for r in reports) / len(reports))
+    lines.append("Health score: %d/100 (%s)" % (health, grade_for(health)))
     return "\n".join(lines)
 
 
@@ -527,6 +592,8 @@ def main(argv=None):
             "scanned": roots,
             "skills": [r.to_dict() for r in reports],
             "total_tokens": sum(r.tokens for r in reports),
+            "health_score": round(sum(r.score for r in reports) / len(reports)) if reports else None,
+            "health_grade": grade_for(round(sum(r.score for r in reports) / len(reports))) if reports else None,
             "summary": {
                 "total": len(reports),
                 "ok": sum(1 for r in reports if r.verdict == "OK"),
