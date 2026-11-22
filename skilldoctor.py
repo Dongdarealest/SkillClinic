@@ -6,14 +6,19 @@ folders used by common AI coding hosts, then checks every SKILL.md it finds
 for four things in one pass:
 
   1. Validity: the YAML frontmatter parses, required fields are present,
-     and the skill name matches its folder and is kebab-case.
-  2. Security: risky instructions in the skill body, such as shell pipes
-     from the network, credential store references, exfiltration language,
-     opaque base64 blobs, and prompt override phrases.
+     the skill name matches its folder and is kebab-case, and the name
+     and description fit the spec length limits.
+  2. Security: risky instructions anywhere in the skill, in the
+     frontmatter and body of SKILL.md and in the text files bundled
+     with it, such as shell pipes from the network, credential store
+     references, exfiltration language, opaque base64 blobs, prompt
+     override phrases, and invisible Unicode characters.
   3. Conflicts: the same skill name installed in more than one place, and
      near-duplicate descriptions that make hosts pick the wrong skill.
-  4. Token cost: an estimate of how many tokens each skill adds to every
-     conversation, and the total always-on cost of everything installed.
+     Skills namespaced inside a plugin are not conflicts.
+  4. Token cost: an estimate split in two, the always-on cost of the
+     name and description that hosts load into every conversation, and
+     the body tokens that load only when the skill is used.
 
 Zero dependencies. Python 3.10 or newer. Auditing is read only. Removal
 is a separate step you ask for, and it quarantines instead of deleting,
@@ -29,6 +34,7 @@ Exit code is 1 when any skill verdict is FAIL, otherwise 0.
 """
 
 import argparse
+import hashlib
 import json
 import math
 import os
@@ -37,7 +43,7 @@ import shutil
 import sys
 from datetime import datetime
 
-VERSION = "0.3.7"
+VERSION = "0.3.8"
 
 DEFAULT_LOCATIONS = [
     "~/.claude/skills",
@@ -49,6 +55,19 @@ DEFAULT_LOCATIONS = [
 REQUIRED_FIELDS = ("name", "description")
 KEBAB_RE = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")
 SNAKE_RE = re.compile(r"^[a-z0-9]+(_[a-z0-9]+)*$")
+
+# Agent Skills spec limits on the two metadata fields a host always loads.
+NAME_LIMIT = 64
+DESCRIPTION_LIMIT = 1024
+
+# Text files bundled in a skill folder get the same security scan as
+# SKILL.md, up to a per file size cap. Anything else in the folder is
+# listed in the report as not audited, so the limit stays visible.
+AUDIT_EXTENSIONS = {
+    ".md", ".txt", ".sh", ".bash", ".py", ".js", ".ts",
+    ".json", ".yaml", ".yml", ".toml",
+}
+AUDIT_FILE_CAP = 256 * 1024
 
 # ---------------------------------------------------------------------------
 # Security patterns. Each entry: (compiled regex, severity, label).
@@ -115,6 +134,31 @@ SECURITY_PATTERNS = [
         "uses destructive or elevated shell commands",
     ),
 ]
+
+
+# ---------------------------------------------------------------------------
+# Hidden Unicode. These characters are invisible in an editor but are
+# read by the host, so they can carry instructions a human reviewer
+# cannot see: bidi controls that reorder displayed text, zero width
+# characters, and Unicode tag characters.
+# ---------------------------------------------------------------------------
+HIDDEN_UNICODE_CLASSES = [
+    ("bidi control", list(range(0x202A, 0x202F)) + list(range(0x2066, 0x206A))),
+    ("zero width", [0x200B, 0x200C, 0x200D, 0x2060, 0xFEFF]),
+    ("Unicode tag", list(range(0xE0000, 0xE0080))),
+]
+
+
+def find_hidden_unicode(text):
+    """Return (class label, codepoint) for the first hidden character
+    found in each class, or an empty list when the text is clean."""
+    hits = []
+    for label, codepoints in HIDDEN_UNICODE_CLASSES:
+        for cp in codepoints:
+            if chr(cp) in text:
+                hits.append((label, cp))
+                break
+    return hits
 
 
 # ---------------------------------------------------------------------------
@@ -229,6 +273,10 @@ class SkillReport:
         self.name = None
         self.description = ""
         self.tokens = 0
+        self.always_on_tokens = 0
+        self.body_tokens = 0
+        self.content_hash = ""
+        self.not_audited = []
         self.findings = []
 
     def add(self, kind, severity, message):
@@ -264,6 +312,9 @@ class SkillReport:
             "host": self.host,
             "path": self.path,
             "tokens": self.tokens,
+            "always_on_tokens": self.always_on_tokens,
+            "body_tokens": self.body_tokens,
+            "not_audited_files": list(self.not_audited),
             "verdict": self.verdict,
             "score": self.score,
             "grade": self.grade,
@@ -281,6 +332,7 @@ def audit_skill(folder, host):
         return report
 
     report.tokens = estimate_tokens(text)
+    report.content_hash = hashlib.sha256(text.encode("utf-8", "replace")).hexdigest()
     fields, body, error = parse_frontmatter(text)
     muse_format = False
     if error == "missing YAML frontmatter block":
@@ -314,16 +366,96 @@ def audit_skill(folder, host):
                 "validity", "error",
                 "name '%s' does not match its folder '%s'" % (name, folder_name),
             )
+        if len(name) > NAME_LIMIT:
+            report.add(
+                "validity", "error",
+                "name is %d characters, over the %d character spec limit"
+                % (len(name), NAME_LIMIT),
+            )
+    if len(report.description) > DESCRIPTION_LIMIT:
+        report.add(
+            "validity", "warn",
+            "description is %d characters, over the %d character spec limit"
+            % (len(report.description), DESCRIPTION_LIMIT),
+        )
 
-    # Security patterns run against a whitespace flattened copy of the body,
-    # so instructions wrapped across lines are still caught.
-    flat_body = re.sub(r"\s+", " ", body)
+    # The token split a host actually charges: name and description are
+    # loaded into every conversation, the body only when the skill runs.
+    report.always_on_tokens = estimate_tokens((name + " " + report.description).strip())
+    report.body_tokens = estimate_tokens(body)
+
+    # Security patterns run against a whitespace flattened copy of the
+    # full text, frontmatter included, so instructions wrapped across
+    # lines are still caught. The frontmatter matters most: the
+    # description is the part a host loads into every conversation.
+    flat_text = re.sub(r"\s+", " ", text)
     for pattern, severity, label in SECURITY_PATTERNS:
-        match = pattern.search(flat_body)
+        match = pattern.search(flat_text)
         if match:
             report.add("security", severity, "security: skill %s" % label)
+    for label, codepoint in find_hidden_unicode(text):
+        report.add(
+            "security", "high",
+            "security: SKILL.md contains a hidden %s character (U+%04X) "
+            "that a reader cannot see" % (label, codepoint),
+        )
+    audit_bundled_files(report)
 
     return report
+
+
+def audit_bundled_files(report):
+    """Scan the other text files bundled in the skill folder.
+
+    SKILL.md can tell the host to run or read these files, so they get
+    the same security patterns and the hidden Unicode check, with each
+    finding attributed to its file. Anything that cannot be scanned
+    (an extension the auditor does not read, or a file over the size
+    cap) lands on the report as not audited, so the limit is visible
+    in the output instead of silent.
+    """
+    found = []
+    for dirpath, dirnames, filenames in os.walk(report.folder):
+        dirnames[:] = sorted(
+            d for d in dirnames
+            if d != ".git" and d != "__pycache__" and not d.startswith(".")
+        )
+        for name in sorted(filenames):
+            path = os.path.join(dirpath, name)
+            if os.path.abspath(path) == os.path.abspath(report.path):
+                continue
+            found.append(path)
+    for path in sorted(found, key=lambda p: os.path.relpath(p, report.folder)):
+        rel = os.path.relpath(path, report.folder)
+        ext = os.path.splitext(path)[1].lower()
+        try:
+            size = os.path.getsize(path)
+        except OSError:
+            report.not_audited.append(rel)
+            continue
+        if ext not in AUDIT_EXTENSIONS or size > AUDIT_FILE_CAP:
+            report.not_audited.append(rel)
+            continue
+        try:
+            with open(path, "r", encoding="utf-8", errors="replace") as fh:
+                bundled = fh.read()
+        except OSError:
+            report.not_audited.append(rel)
+            continue
+        flat = re.sub(r"\s+", " ", bundled)
+        for pattern, severity, label in SECURITY_PATTERNS:
+            if pattern.search(flat):
+                report.add(
+                    "security", severity,
+                    "security: in %s: %s" % (rel, label),
+                )
+        for label, codepoint in find_hidden_unicode(bundled):
+            report.add(
+                "security", "high",
+                "security: %s contains a hidden %s character (U+%04X) "
+                "that a reader cannot see" % (rel, label, codepoint),
+            )
+    report.not_audited.sort()
 
 
 def find_skill_folders(root):
@@ -349,19 +481,88 @@ def find_skill_folders(root):
             yield dirpath, host
 
 
+VERSION_DIR_RE = re.compile(r"^v?\d+(\.\d+)*([-.+][0-9A-Za-z.-]*)?$")
+
+
+def _path_parts(folder):
+    return os.path.normpath(os.path.abspath(os.path.expanduser(folder))).split(os.sep)
+
+
+def _plugin_name(folder):
+    """The plugin a skill folder belongs to, or None.
+
+    Plugin layouts put the plugin name just after the plugins folder,
+    or after a cache or marketplaces folder plus the marketplace name:
+    ~/.claude/plugins/cache/<marketplace>/<plugin>/<version>/...
+    """
+    parts = _path_parts(folder)
+    if "plugins" not in parts:
+        return None
+    rest = parts[parts.index("plugins") + 1:]
+    if not rest:
+        return None
+    if rest[0] in ("cache", "marketplaces"):
+        if len(rest) >= 3:
+            return rest[2]
+        return rest[1] if len(rest) == 2 else None
+    return rest[0]
+
+
+def _version_siblings(a, b):
+    """True when two folders differ only in version-like components,
+    the shape of a plugin cache holding several versions of one plugin."""
+    def strip(parts):
+        return [p for p in parts if not VERSION_DIR_RE.match(p)]
+    return strip(_path_parts(a)) == strip(_path_parts(b))
+
+
+def _pair_clashes(a, b):
+    """Whether two same-name skills actually compete for one name.
+
+    A skill inside a plugin is namespaced by that plugin, so it can
+    only clash with another skill in the same plugin. Two cached
+    versions of one plugin, and two byte identical files inside a
+    plugin tree, are the same skill rather than a conflict.
+    """
+    a_plugin = _plugin_name(a.folder)
+    b_plugin = _plugin_name(b.folder)
+    if (a_plugin is None) != (b_plugin is None):
+        return False
+    if a_plugin is not None:
+        if a.content_hash and a.content_hash == b.content_hash:
+            return False
+        if a_plugin != b_plugin:
+            return False
+        if _version_siblings(a.folder, b.folder):
+            return False
+    return True
+
+
 def apply_conflict_checks(reports):
     by_name = {}
     for r in reports:
         if r.name:
             by_name.setdefault(r.name, []).append(r)
     for name, group in by_name.items():
-        if len(group) > 1:
-            places = ", ".join(sorted(g.folder for g in group))
-            for r in group:
+        if len(group) < 2:
+            continue
+        clusters = []
+        for r in group:
+            for cluster in clusters:
+                if any(_pair_clashes(r, other) for other in cluster):
+                    cluster.append(r)
+                    break
+            else:
+                clusters.append([r])
+        for cluster in clusters:
+            if len(cluster) < 2:
+                continue
+            places = ", ".join(sorted(g.folder for g in cluster))
+            for r in cluster:
                 r.add(
                     "conflict", "warn",
                     "conflict: skill name '%s' is installed in %d places: %s"
-                    % (name, len(group), places),
+                    % (name, len(cluster), places),
                 )
     for i in range(len(reports)):
         for j in range(i + 1, len(reports)):
@@ -405,6 +606,9 @@ HINTS = [
     ("not kebab-case", "Rename the skill with lowercase words joined by hyphens."),
     ("not snake_case", "Rename the skill with lowercase words joined by underscores."),
     ("does not match its folder", "Rename the folder or the name field so the two are identical."),
+    ("over the 64 character spec limit", "Shorten the name to 64 characters or fewer."),
+    ("over the 1024 character spec limit", "Shorten the description to 1024 characters or fewer."),
+    ("contains a hidden", "Remove the invisible characters. If you cannot tell what they hide, retype the passage by hand."),
     ("cannot read SKILL.md", "Check the file exists and is readable plain text."),
     ("pipes a network download", "Never pipe a download into a shell. Download the file, read it, then decide whether to run it."),
     ("ignore its previous instructions", "Delete the override language. A skill should never outrank the host that runs it."),
@@ -474,38 +678,49 @@ def render_text(reports, roots):
         lines.append("To see what a report looks like first:")
         lines.append("  skilldoctor --demo")
         return "\n".join(lines)
-    total_tokens = 0
+    total_always_on = 0
+    total_body = 0
     counts = {"OK": 0, "WARN": 0, "FAIL": 0}
     for r in reports:
         counts[r.verdict] += 1
-        total_tokens += r.tokens
+        total_always_on += r.always_on_tokens
+        total_body += r.body_tokens
         title = r.name or "(unnamed skill)"
         lines.append("%s  %s" % (r.verdict.ljust(4), title))
         lines.append("      folder: %s" % display_path(r.folder))
-        lines.append("      tokens: ~%d" % r.tokens)
+        lines.append(
+            "      tokens: ~%d always-on, ~%d body, ~%d total"
+            % (r.always_on_tokens, r.body_tokens, r.tokens)
+        )
         lines.append("      score: %d (%s)" % (r.score, r.grade))
         for f in r.findings:
             lines.append("      - [%s] %s" % (f.severity, f.message))
             hint = hint_for(f.message)
             if hint:
                 lines.append("        fix: %s" % hint)
+        if r.not_audited:
+            lines.append("      not audited: %s" % ", ".join(r.not_audited))
         lines.append("")
     lines.append(
         "Summary: %d skills, %d OK, %d WARN, %d FAIL"
         % (len(reports), counts["OK"], counts["WARN"], counts["FAIL"])
     )
     lines.append(
-        "Always-on token cost: ~%d tokens loaded into every conversation"
-        % total_tokens
+        "Always-on token cost: ~%d tokens loaded into every conversation "
+        "(names and descriptions)" % total_always_on
+    )
+    lines.append(
+        "Body token cost: ~%d tokens loaded only when a skill is used"
+        % total_body
     )
     health = round(sum(r.score for r in reports) / len(reports))
     lines.append("Health score: %d/100 (%s)" % (health, grade_for(health)))
     failed = [r for r in reports if r.verdict == "FAIL"]
     if failed:
-        freed = sum(r.tokens for r in failed)
+        freed = sum(r.always_on_tokens for r in failed)
         lines.append(
             "Next step: skilldoctor --quarantine-failed moves the %d failed skill(s) out, "
-            "frees ~%d tokens from every conversation, and keeps them restorable."
+            "frees ~%d always-on tokens from every conversation, and keeps them restorable."
             % (len(failed), freed)
         )
     return "\n".join(lines)
@@ -665,6 +880,8 @@ def main(argv=None):
             "scanned": roots,
             "skills": [r.to_dict() for r in reports],
             "total_tokens": sum(r.tokens for r in reports),
+            "total_always_on_tokens": sum(r.always_on_tokens for r in reports),
+            "total_body_tokens": sum(r.body_tokens for r in reports),
             "health_score": round(sum(r.score for r in reports) / len(reports)) if reports else None,
             "health_grade": grade_for(round(sum(r.score for r in reports) / len(reports))) if reports else None,
             "summary": {

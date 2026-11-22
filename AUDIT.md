@@ -25,4 +25,4 @@ Across all six collections, the most common findings were mentions of API keys, 
 
 ## Method and limits
 
-SkillDoctor checks four things: frontmatter validity and naming, a set of security patterns matched on the text, conflicts between installed skills, and estimated token cost. It does not execute anything and does not judge whether a skill is good at its job. ECC was capped at its first 500 SKILL.md files. Star counts are as of the audit date.
+SkillDoctor checks four things: frontmatter validity and naming, a set of security patterns matched on the text, conflicts between installed skills, and estimated token cost. It does not execute anything and does not judge whether a skill is good at its job. ECC was capped at its first 500 SKILL.md files. Star counts are as of the audit date. One correction on the token figures quoted when this audit was first published: they were computed from the full text of each SKILL.md, so they measure total text size. Only a skill's name and description are loaded into every conversation; the body loads when the skill is used. SkillDoctor 0.3.8 and later report the two costs separately.

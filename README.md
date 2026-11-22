@@ -31,14 +31,16 @@ pip install skillcheckup
 One line installs a `skilldoctor` command on your machine:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Dongdarealest/skilldoctor/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Dongdarealest/skilldoctor/v0.3.8/install.sh | bash
 ```
 
 On Windows, in PowerShell:
 
 ```powershell
-irm https://raw.githubusercontent.com/Dongdarealest/skilldoctor/main/install.ps1 | iex
+irm https://raw.githubusercontent.com/Dongdarealest/skilldoctor/v0.3.8/install.ps1 | iex
 ```
+
+Both installers are pinned to the v0.3.8 release tag and verify the published SHA-256 of `skilldoctor.py` before installing, refusing on any mismatch. The tool audits installers it would not trust, so its own had to pass.
 
 Then it is just:
 
@@ -62,10 +64,10 @@ No installer fan? The whole tool is one file: download `skilldoctor.py` from thi
 
 | Check | What it catches |
 | --- | --- |
-| Validity | Frontmatter that does not parse, missing name or description, names that are not kebab-case or do not match their folder |
-| Security | Downloads piped into a shell, instructions touching credential stores, language that sends user data out, prompt override phrases, uninspectable base64 blobs, destructive commands |
-| Conflicts | The same skill name installed in several host folders, near-duplicate descriptions that make hosts load the wrong skill |
-| Token cost | The estimated tokens each skill adds, and the total always-on cost loaded into every conversation |
+| Validity | Frontmatter that does not parse, missing name or description, names that are not kebab-case or do not match their folder, names and descriptions over the spec length limits |
+| Security | Downloads piped into a shell, instructions touching credential stores, language that sends user data out, prompt override phrases, uninspectable base64 blobs, destructive commands, invisible Unicode characters, and the same patterns in the text files bundled with a skill |
+| Conflicts | The same skill name installed in several host folders, near-duplicate descriptions that make hosts load the wrong skill. Skills namespaced inside a plugin are not conflicts |
+| Token cost | Always-on tokens (the name and description a host loads into every conversation) counted apart from body tokens, which load only when a skill runs |
 
 ## Reading the report
 
@@ -111,7 +113,7 @@ Paste this into your README and it renders as the badge above:
 This repo doubles as a GitHub Action, so a collection can audit itself on every push:
 
 ```yaml
-- uses: Dongdarealest/skilldoctor@v0.3.5
+- uses: Dongdarealest/skilldoctor@v0.3.8
 ```
 
 It fails the build when any skill fails the audit. Anywhere else, the plain command does the same job in CI: `skilldoctor --json` for machines, exit code 1 on any FAIL.
