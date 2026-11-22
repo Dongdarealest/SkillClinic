@@ -209,3 +209,15 @@ class ScoreTest(unittest.TestCase):
         self.assertLess(risky.score, 40)
         fixes = [f.to_dict().get("fix") for f in risky.findings]
         self.assertTrue(any(fixes))
+
+
+class GuidanceTest(unittest.TestCase):
+    def test_failing_report_ends_with_next_step(self):
+        root = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "examples")
+        text = sd.render_text(sd.scan([root]), [root])
+        self.assertIn("Next step: skilldoctor --quarantine-failed", text)
+        self.assertIn("Health score:", text)
+
+    def test_empty_report_guides_instead_of_dead_ending(self):
+        text = sd.render_text([], ["/nonexistent"])
+        self.assertIn("skilldoctor --demo", text)

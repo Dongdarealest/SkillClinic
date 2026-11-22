@@ -15,7 +15,7 @@ for four things in one pass:
   4. Token cost: an estimate of how many tokens each skill adds to every
      conversation, and the total always-on cost of everything installed.
 
-Zero dependencies. Python 3.8 or newer. Auditing is read only. Removal
+Zero dependencies. Python 3.10 or newer. Auditing is read only. Removal
 is a separate step you ask for, and it quarantines instead of deleting,
 so anything removed can be restored.
 
@@ -37,7 +37,7 @@ import shutil
 import sys
 from datetime import datetime
 
-VERSION = "0.3.0"
+VERSION = "0.3.1"
 
 DEFAULT_LOCATIONS = [
     "~/.claude/skills",
@@ -405,9 +405,25 @@ def render_text(reports, roots):
     lines.append("SkillDoctor %s" % VERSION)
     shown = [display_path(os.path.abspath(os.path.expanduser(r))) for r in roots]
     lines.append("Scanned: %s" % (", ".join(shown) if shown else "no locations found"))
+    if reports:
+        health = round(sum(r.score for r in reports) / len(reports))
+        if health >= 90:
+            mood = "Healthy. Nothing here needs your attention."
+        elif health >= 60:
+            mood = "Mostly fine. A few things below are worth a look."
+        elif health >= 40:
+            mood = "Needs attention. Some skills are broken or risky."
+        else:
+            mood = "Risky setup. Read the failures before your next session."
+        lines.append(mood)
     lines.append("")
     if not reports:
         lines.append("No skills found. Nothing to audit.")
+        lines.append("")
+        lines.append("SkillDoctor looked in the usual host folders. To audit a folder directly:")
+        lines.append("  skilldoctor ~/path/to/skills")
+        lines.append("To see what a report looks like first:")
+        lines.append("  skilldoctor --demo")
         return "\n".join(lines)
     total_tokens = 0
     counts = {"OK": 0, "WARN": 0, "FAIL": 0}
@@ -435,6 +451,14 @@ def render_text(reports, roots):
     )
     health = round(sum(r.score for r in reports) / len(reports))
     lines.append("Health score: %d/100 (%s)" % (health, grade_for(health)))
+    failed = [r for r in reports if r.verdict == "FAIL"]
+    if failed:
+        freed = sum(r.tokens for r in failed)
+        lines.append(
+            "Next step: skilldoctor --quarantine-failed moves the %d failed skill(s) out, "
+            "frees ~%d tokens from every conversation, and keeps them restorable."
+            % (len(failed), freed)
+        )
     return "\n".join(lines)
 
 

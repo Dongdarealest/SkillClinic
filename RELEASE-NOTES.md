@@ -1,3 +1,7 @@
+## v0.3.1
+
+The report now speaks first and guides after. A plain language verdict opens every report, an empty scan explains where to point the tool instead of dead ending, and a failing audit ends with the exact next command and the tokens it frees. The README quick start moved up to where a new visitor looks for it. The CI matrix also drops Python 3.8, which current GitHub runners no longer provide, and runs each version to completion instead of cancelling the rest.
+
 ## v0.3.0
 
 The report learned to grade and to advise. Every skill now carries a score out of 100 with a letter grade, the installation gets one health score, and most findings come with a fix line that says exactly what to change. Twenty two tests pass.
