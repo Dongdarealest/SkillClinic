@@ -1,3 +1,7 @@
+## v0.4.5
+
+A placement fix. The generic audited plaque restored in v0.4.4 sat deep in the README, inside Show your audit, where a returning reader would never find it. In v0.4.1 it lived in its place of honor directly under the badge row, and it is back there now, with its original words: projects that pass the audit earn this plaque, the picture alone proves nothing, and the registry entry is the proof. Show your audit keeps the full enrollment explanation and simply points back to the plaque at the top of the page, so the plaque image appears exactly once in the README. No tool behavior changes in this release. Ninety nine tests pass.
+
 ## v0.4.4
 
 A restoration. The v0.4.3 redesign cut the generic audited plaque from the README along with the personalized one, but the two are different things: the personalized plaque for this repo stays out, while the generic plaque (assets/audited-plaque.svg, the mark of a checked skill) is the project's own brand emblem, the sample every passing project earns. It is back in its place of honor at the head of the Show your audit section, with its original words: projects that pass the audit earn this plaque, the picture alone proves nothing, and the registry entry is the proof. This repo still wears only the small badge in its top row, which reads NO SKILLS. No tool behavior changes in this release. Ninety nine tests pass.

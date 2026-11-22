@@ -16,6 +16,12 @@
   <a href="https://dongdarealest.github.io/skilldoctor/"><img src="https://skilldoctor-badges.vercel.app/badges/Dongdarealest--skilldoctor.svg" alt="Audited by SkillDoctor"></a>
 </p>
 
+<p align="center">
+  <a href="https://github.com/Dongdarealest/skilldoctor/blob/main/REGISTRY.md"><img src="https://raw.githubusercontent.com/Dongdarealest/skilldoctor/main/assets/audited-plaque.svg" alt="The SkillDoctor audited plaque: the mark of a checked skill" width="560"></a>
+</p>
+
+Projects that pass the audit earn this plaque. The picture alone proves nothing, and anyone can paste one: the proof is the entry in the registry, kept live at [dongdarealest.github.io/skilldoctor](https://dongdarealest.github.io/skilldoctor/).
+
 Skills are instruction files your AI loads and follows, often at the start of every conversation. Most people install them from repositories, gists, and chat messages without ever reading them. SkillDoctor reads them for you. This is what an audit looks like:
 
 <p align="center">
@@ -137,13 +143,7 @@ Full method, findings, and limits: [The State of Public Skills](AUDIT.md).
 
 ## Show your audit
 
-Publish skills of your own? A collection that passes the audit earns this plaque:
-
-<p align="center">
-  <a href="https://github.com/Dongdarealest/skilldoctor/blob/main/REGISTRY.md"><img src="https://raw.githubusercontent.com/Dongdarealest/skilldoctor/main/assets/audited-plaque.svg" alt="The SkillDoctor audited plaque: the mark of a checked skill" width="560"></a>
-</p>
-
-Projects that pass the audit earn this plaque and the badge further down. The picture alone proves nothing, and anyone can paste one: the proof is the entry in the registry, kept live at [dongdarealest.github.io/skilldoctor](https://dongdarealest.github.io/skilldoctor/) and described in [REGISTRY.md](REGISTRY.md). Listings carry only the score their own repo's audit produced, a listing by hand is added only after the maintainers re-run the audit and the results match, and a daily re-audit keeps every listed badge honest after that.
+Publish skills of your own? A collection that passes the audit earns the plaque shown at the top of this page. Listings carry only the score their own repo's audit produced, a listing by hand is added only after the maintainers re-run the audit and the results match, and a daily re-audit keeps every listed badge honest after that.
 
 Yours is served live, plaque and badge alike, from an address that carries your own GitHub identity:
 
