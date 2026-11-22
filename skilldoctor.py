@@ -37,7 +37,7 @@ import shutil
 import sys
 from datetime import datetime
 
-VERSION = "0.3.1"
+VERSION = "0.3.2"
 
 DEFAULT_LOCATIONS = [
     "~/.claude/skills",
@@ -292,13 +292,14 @@ def find_skill_folders(root):
     if not os.path.isdir(root):
         return
     host = os.path.basename(root)
-    if os.path.isfile(os.path.join(root, "SKILL.md")):
-        yield root, host
-        return
-    for entry in sorted(os.listdir(root)):
-        child = os.path.join(root, entry)
-        if os.path.isdir(child) and os.path.isfile(os.path.join(child, "SKILL.md")):
-            yield child, host
+    for dirpath, dirnames, filenames in os.walk(root):
+        depth = os.path.relpath(dirpath, root).count(os.sep)
+        if depth > 6:
+            dirnames[:] = []
+            continue
+        dirnames[:] = sorted(d for d in dirnames if d != ".git" and not d.startswith("."))
+        if "SKILL.md" in filenames:
+            yield dirpath, host
 
 
 def apply_conflict_checks(reports):

@@ -25,7 +25,11 @@ One line installs a `skilldoctor` command on your machine:
 curl -fsSL https://raw.githubusercontent.com/Dongdarealest/skilldoctor/main/install.sh | bash
 ```
 
-On Windows, in PowerShell: `irm https://raw.githubusercontent.com/Dongdarealest/skilldoctor/main/install.ps1 | iex`
+On Windows, in PowerShell:
+
+```powershell
+irm https://raw.githubusercontent.com/Dongdarealest/skilldoctor/main/install.ps1 | iex
+```
 
 Then it is just:
 
