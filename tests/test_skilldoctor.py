@@ -221,3 +221,14 @@ class GuidanceTest(unittest.TestCase):
     def test_empty_report_guides_instead_of_dead_ending(self):
         text = sd.render_text([], ["/nonexistent"])
         self.assertIn("skilldoctor --demo", text)
+
+
+class NestedDiscoveryTest(unittest.TestCase):
+    def test_skills_nested_under_a_skills_folder_are_found(self):
+        tmp = tempfile.mkdtemp()
+        deep = os.path.join(tmp, "collection", "skills", "deep-skill")
+        os.makedirs(deep)
+        with open(os.path.join(deep, "SKILL.md"), "w") as fh:
+            fh.write("---\nname: deep-skill\ndescription: A skill nested two levels down in a collection.\n---\n\nBe helpful.\n")
+        reports = sd.scan([os.path.join(tmp, "collection")])
+        self.assertEqual([r.name for r in reports], ["deep-skill"])

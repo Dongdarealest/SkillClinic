@@ -1,3 +1,7 @@
+## v0.3.2
+
+SkillDoctor now looks deeper. Real collections nest their skills a few folders down, and the scanner only looked one level deep, so pointing it at a collection root found nothing. It now walks the tree. The Windows install line also gets its own code block with a copy button, like the Mac and Linux one.
+
 ## v0.3.1
 
 The report now speaks first and guides after. A plain language verdict opens every report, an empty scan explains where to point the tool instead of dead ending, and a failing audit ends with the exact next command and the tokens it frees. The README quick start moved up to where a new visitor looks for it. The CI matrix also drops Python 3.8, which current GitHub runners no longer provide, and runs each version to completion instead of cancelling the rest.
