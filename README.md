@@ -5,7 +5,7 @@
 <p align="center">
   <a href="https://github.com/Dongdarealest/skilldoctor/releases"><img src="https://img.shields.io/github/v/release/Dongdarealest/skilldoctor?style=flat-square&color=141414&label=release" alt="Latest release"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-141414?style=flat-square" alt="MIT license"></a>
-  <img src="https://img.shields.io/badge/python-3.8%2B-141414?style=flat-square" alt="Python 3.8 or newer">
+  <img src="https://img.shields.io/badge/python-3.10%2B-141414?style=flat-square" alt="Python 3.10 or newer">
   <img src="https://img.shields.io/badge/dependencies-zero-141414?style=flat-square" alt="Zero dependencies">
 </p>
 
@@ -16,15 +16,6 @@ Skills are instructions your AI loads and follows, often at the start of every c
 </p>
 
 <p align="center"><em>The bundled demo: one clean skill passes, two fail, every failure with its reason.</em></p>
-
-## What it checks
-
-| Check | What it catches |
-| --- | --- |
-| Validity | Frontmatter that does not parse, missing name or description, names that are not kebab-case or do not match their folder |
-| Security | Downloads piped into a shell, instructions touching credential stores, language that sends user data out, prompt override phrases, uninspectable base64 blobs, destructive commands |
-| Conflicts | The same skill name installed in several host folders, near-duplicate descriptions that make hosts load the wrong skill |
-| Token cost | The estimated tokens each skill adds, and the total always-on cost loaded into every conversation |
 
 ## Quick start
 
@@ -52,7 +43,16 @@ skilldoctor ~/path/to/skills
 skilldoctor --json
 ```
 
-No installer fan? The whole tool is one file: download `skilldoctor.py` from this repo and run `python3 skilldoctor.py` the same way. It needs Python 3.8 or newer and nothing else.
+No installer fan? The whole tool is one file: download `skilldoctor.py` from this repo and run `python3 skilldoctor.py` the same way. It needs Python 3.10 or newer and nothing else.
+
+## What it checks
+
+| Check | What it catches |
+| --- | --- |
+| Validity | Frontmatter that does not parse, missing name or description, names that are not kebab-case or do not match their folder |
+| Security | Downloads piped into a shell, instructions touching credential stores, language that sends user data out, prompt override phrases, uninspectable base64 blobs, destructive commands |
+| Conflicts | The same skill name installed in several host folders, near-duplicate descriptions that make hosts load the wrong skill |
+| Token cost | The estimated tokens each skill adds, and the total always-on cost loaded into every conversation |
 
 ## Reading the report
 
