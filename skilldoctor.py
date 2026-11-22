@@ -48,7 +48,7 @@ import shutil
 import sys
 from datetime import datetime
 
-VERSION = "0.3.9"
+VERSION = "0.4.0"
 
 DEFAULT_LOCATIONS = [
     "~/.claude/skills",
@@ -865,15 +865,29 @@ def render_text(reports, roots):
             "so this project has earned the SkillDoctor badge." % health
         )
         lines.append(
-            "Run again with --write-badge to write the badge, the plaque and "
-            "the machine report into the audited folder: the badge for badge "
-            "rows, the plaque for a place of honor."
+            "The badge worth wearing is the live one. Your badge "
+            "address carries your own GitHub owner and repo, and the "
+            "generator on the registry page builds the ready to paste "
+            "snippet from it. Paste the snippet into your README and "
+            "that is the whole enrollment: the daily verification run "
+            "searches GitHub for the badge address, audits the repo it "
+            "names, and lists it with its real score. The image is "
+            "regenerated from the latest audit: keep passing and it "
+            "shows the current score, stop passing and it flips to a "
+            "grey recheck plaque until the project passes again."
         )
         lines.append(
-            "To be listed in the registry, open an issue in the skilldoctor "
-            "repo and attach skilldoctor-report.json, or link your public "
-            "repo. A listing is added only after the maintainers re-run the "
-            "audit and the results match."
+            "Prefer a human check, or a listing at a chosen folder "
+            "instead of the repo root? Open an issue in the skilldoctor "
+            "repo and attach skilldoctor-report.json, or link your "
+            "public repo, and the maintainers verify and list it by "
+            "hand."
+        )
+        lines.append(
+            "Run with --write-badge to write the machine report, plus a "
+            "dated snapshot of the badge and the plaque, into the audited "
+            "folder: the snapshot is for announcements and offline use, "
+            "the report is what a listing request attaches."
         )
     return "\n".join(lines)
 

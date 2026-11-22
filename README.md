@@ -14,7 +14,7 @@
   <a href="https://github.com/Dongdarealest/skilldoctor/blob/main/REGISTRY.md"><img src="https://raw.githubusercontent.com/Dongdarealest/skilldoctor/main/assets/audited-plaque.svg" alt="The SkillDoctor audited plaque: the mark of a checked skill" width="560"></a>
 </p>
 
-Projects that pass the audit earn this plaque and the badge further down. The picture alone proves nothing, and anyone can paste one: the proof is the entry in the [registry](REGISTRY.md), added only after the maintainers re-run the audit and the results match.
+Projects that pass the audit earn this plaque and the badge further down. The picture alone proves nothing, and anyone can paste one: the proof is the entry in the registry, kept live at [dongdarealest.github.io/skilldoctor](https://dongdarealest.github.io/skilldoctor/) and described in [REGISTRY.md](REGISTRY.md). Listings are added only after the maintainers re-run the audit and the results match, and a daily re-audit keeps every listed badge honest after that.
 
 Skills are instructions your AI loads and follows, often at the start of every conversation. Most people install them from repositories, gists, and chat messages without ever reading them. SkillDoctor reads them for you: one command audits every skill on your machine and gives each one a verdict.
 
@@ -104,30 +104,50 @@ Nothing is deleted outright. Failed skills move to `~/.skilldoctor/quarantine` i
 
 ## Show your audit
 
-Publish skills of your own? When your collection passes a SkillDoctor audit, it has earned the badge. One command writes it, with a large plaque for a place of honor and the machine report, into the audited folder:
+Publish skills of your own? When your collection passes a SkillDoctor audit, it has earned the badge, and the badge worth wearing is a live one.
+
+Your badge address carries your own GitHub identity, and nobody issues it to you:
+
+```
+https://dongdarealest.github.io/skilldoctor/badges/<owner>--<repo>.svg
+```
+
+Build it from your owner and repo names, or let the generator on the [registry page](https://dongdarealest.github.io/skilldoctor/) build the ready to paste snippet for you. Paste it into your README:
+
+```markdown
+[![Audited by SkillDoctor](https://dongdarealest.github.io/skilldoctor/badges/<owner>--<repo>.svg)](https://dongdarealest.github.io/skilldoctor/)
+```
+
+That paste is the whole enrollment. A scheduled job searches GitHub every day for the badge address, reads the owner and repo out of the address itself, audits that repo, and lists it in the registry with its real score. The image is served from the registry site and regenerated from the latest audit: keep passing and it shows your current score; stop passing and it flips to a grey recheck plaque until the project passes again. Take the badge out of your README and the listing is dropped on the next run, images and all. Discovery rides on GitHub code search indexing, so a brand new badge can take some hours to be found; the badge activates at the next daily verification run after that.
+
+For a place of honor, the same address with `-plaque` before `.svg` gives the large format:
+
+```html
+<a href="https://dongdarealest.github.io/skilldoctor/"><img src="https://dongdarealest.github.io/skilldoctor/badges/<owner>--<repo>-plaque.svg" alt="SkillDoctor audited plaque" width="560"></a>
+```
+
+This is a real one, SkillPort's small badge, served live:
+
+[![Audited by SkillDoctor](https://dongdarealest.github.io/skilldoctor/badges/Dongdarealest--skillport.svg)](https://dongdarealest.github.io/skilldoctor/)
+
+The plain mark at [badges/audited.svg](https://dongdarealest.github.io/skilldoctor/badges/audited.svg) is there for anyone who just wants the symbol. It carries no score and enrolls nothing; only the personal address is an enrollment.
+
+The static route still exists, for announcements and offline use. One command writes a dated snapshot of the badge and the plaque, with the score and month on their faces, plus the machine report, into the audited folder:
 
 ```bash
 skilldoctor ~/path/to/skills --write-badge
 ```
 
-A failing audit writes nothing: fix the failures first, then take the badge. This is the badge on a repo, linked to the registry where listings are verified:
+A failing audit writes nothing: fix the failures first, then take the badge. A snapshot goes stale the moment the skills change; the live badge cannot, because the daily re-audit speaks for the current state of the repo.
 
-[![Audited by SkillDoctor](https://raw.githubusercontent.com/Dongdarealest/skilldoctor/main/assets/audited-badge.svg)](https://github.com/Dongdarealest/skilldoctor/blob/main/REGISTRY.md)
-
-Paste this into your README and it renders as the badge above:
-
-```markdown
-[![Audited by SkillDoctor](https://raw.githubusercontent.com/Dongdarealest/skilldoctor/main/assets/audited-badge.svg)](https://github.com/Dongdarealest/skilldoctor/blob/main/REGISTRY.md)
-```
-
-The image alone proves nothing, and anyone can paste one. The proof is the registry entry: a listing is added only after the maintainers re-run the audit on the public repo and the results match the submitted report, file hashes included. See [REGISTRY.md](REGISTRY.md) for how verification works and how to ask for a listing.
+The image alone still proves nothing, and anyone can paste one. The proof is the registry entry: discovered projects are listed only with the score their own repo's audit produced, and a listing by hand is added only after the maintainers re-run the audit on the public repo and the results match the submitted report, file hashes included. See [REGISTRY.md](REGISTRY.md) for how verification works, and the registry itself at [dongdarealest.github.io/skilldoctor](https://dongdarealest.github.io/skilldoctor/).
 
 ## In CI, and as a GitHub Action
 
 This repo doubles as a GitHub Action, so a collection can audit itself on every push:
 
 ```yaml
-- uses: Dongdarealest/skilldoctor@v0.3.9
+- uses: Dongdarealest/skilldoctor@v0.4.0
 ```
 
 It fails the build when any skill fails the audit. Anywhere else, the plain command does the same job in CI: `skilldoctor --json` for machines, exit code 1 on any FAIL.

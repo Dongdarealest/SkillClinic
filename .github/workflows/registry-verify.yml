@@ -1,0 +1,34 @@
+name: Registry verification
+
+on:
+  schedule:
+    - cron: "23 2 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Re-audit every listed project and rebuild the registry site
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REGISTRY_SEARCH_TOKEN: ${{ secrets.REGISTRY_SEARCH_TOKEN }}
+        run: python3 tools/registry_build.py
+      - name: Commit the refreshed registry
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs registry
+          if git diff --cached --quiet; then
+            echo "Registry unchanged."
+          else
+            git commit -m "Registry: daily re-verification"
+            git push
+          fi

@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The SkillDoctor registry</title>
+<style>
+:root { color-scheme: dark; }
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: #141414; color: #F2EFE9;
+  font-family: Verdana, Geneva, sans-serif; line-height: 1.55;
+}
+.wrap { max-width: 880px; margin: 0 auto; padding: 48px 20px 64px; }
+.eyebrow {
+  color: #C9A35F; letter-spacing: 3px; font-size: 13px;
+  text-transform: uppercase; margin: 0 0 8px;
+}
+h1 { font-size: 34px; margin: 0 0 12px; font-weight: 600; }
+h2 { font-size: 20px; margin: 0 0 10px; font-weight: 600; }
+.lede { color: #8A8680; font-size: 15px; margin: 0 0 40px; max-width: 640px; }
+.generator, .project {
+  border: 1px solid #2E2E2E; border-radius: 16px;
+  padding: 28px; margin: 0 0 28px; background: #181818;
+}
+.generator p { color: #8A8680; font-size: 14px; margin: 0 0 16px; }
+.generator .row { display: flex; gap: 10px; flex-wrap: wrap; }
+.generator input {
+  flex: 1 1 320px; background: #101010; border: 1px solid #2E2E2E;
+  border-radius: 8px; color: #F2EFE9; padding: 10px 12px; font-size: 14px;
+  font-family: inherit;
+}
+.generator button {
+  background: #141414; border: 1px solid #C9A35F; color: #C9A35F;
+  border-radius: 8px; padding: 10px 18px; font-size: 14px;
+  font-family: inherit; cursor: pointer; letter-spacing: 1px;
+}
+.generator button:hover { background: #C9A35F; color: #141414; }
+.generator label { display: block; font-size: 13px; color: #8A8680; margin: 16px 0 6px; }
+.project img.plaque { max-width: 100%; height: auto; display: block; }
+.project h2 { margin: 20px 0 6px; }
+.project h2 a { color: #F2EFE9; text-decoration: none; }
+.project h2 a:hover { color: #C9A35F; }
+.stats { color: #8A8680; font-size: 14px; margin: 0 0 12px; }
+.links { font-size: 14px; margin: 0 0 16px; }
+.links a { color: #C9A35F; text-decoration: none; }
+.links a:hover { text-decoration: underline; }
+.pill {
+  display: inline-block; border: 1px solid #C9A35F; color: #C9A35F;
+  border-radius: 999px; padding: 1px 10px; font-size: 12px;
+  letter-spacing: 1.5px; text-transform: uppercase; margin-right: 10px;
+}
+.pill.recheck { border-color: #8A8680; color: #8A8680; }
+.note { color: #8A8680; font-size: 14px; margin: 0 0 12px; }
+details { font-size: 13px; color: #8A8680; }
+details summary { cursor: pointer; color: #C9A35F; }
+pre {
+  background: #101010; border: 1px solid #2E2E2E; border-radius: 8px;
+  padding: 12px; overflow-x: auto; color: #F2EFE9; font-size: 12px;
+}
+footer { color: #8A8680; font-size: 13px; margin-top: 48px; }
+footer a { color: #C9A35F; text-decoration: none; }
+footer a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+<p class="eyebrow">SkillDoctor</p>
+<h1>The registry</h1>
+<p class="lede">Projects listed here passed a SkillDoctor audit, and this page is the proof: anyone can paste a badge, so the badges here are live. Most projects got here by wearing the badge; a scheduled job searches GitHub each day for the badge address, audits what it finds, and regenerates these images from the latest result. A project that stops passing flips to a grey recheck plaque until it passes again, and one that takes the badge down is dropped.</p>
+</header>
+<main>
+
+<section class="generator">
+  <h2>Get your live badge</h2>
+  <p>Type your GitHub repo and this page builds your personal snippet.
+  Paste it into your README and that is the whole enrollment: the daily
+  verification run searches GitHub for the badge address, finds your
+  repo, audits it and lists it here with its real score.</p>
+  <div class="row">
+    <input id="repo-input" type="text" placeholder="owner/repo or https://github.com/owner/repo" aria-label="GitHub repository">
+    <button id="repo-go" type="button">Build my snippet</button>
+  </div>
+  <p class="note" id="repo-error" hidden>That does not look like a GitHub owner and repo yet.</p>
+  <div id="repo-out" hidden>
+    <label for="badge-snippet">The badge, for badge rows (Markdown)</label>
+    <pre id="badge-snippet"></pre>
+    <label for="plaque-snippet">The plaque, for a place of honor (HTML)</label>
+    <pre id="plaque-snippet"></pre>
+    <p class="note">Your badge activates at the next daily verification
+    run. GitHub code search indexing can delay discovery of a brand new
+    badge by some hours.</p>
+  </div>
+</section>
+
+<section class="project">
+<a href="https://github.com/Dongdarealest/skillport"><img class="plaque" src="badges/Dongdarealest--skillport-plaque.svg" alt="SkillPort audited plaque" width="560"></a>
+<h2><a href="https://github.com/Dongdarealest/skillport">SkillPort</a></h2>
+<p class="stats">Health 98 of 100 · 30 skills · Verified 2026-11-22</p>
+<p class="links"><span class="pill">Current</span><a href="https://dongdarealest.github.io/skillport/">Homepage</a> · <a href="https://github.com/Dongdarealest/skillport">Repository</a></p>
+<details><summary>This project's live badge and plaque</summary>
+<pre>[![Audited by SkillDoctor](https://dongdarealest.github.io/skilldoctor/badges/Dongdarealest--skillport.svg)](https://dongdarealest.github.io/skilldoctor/)
+
+&lt;a href=&quot;https://dongdarealest.github.io/skilldoctor/&quot;&gt;&lt;img src=&quot;https://dongdarealest.github.io/skilldoctor/badges/Dongdarealest--skillport-plaque.svg&quot; alt=&quot;SkillDoctor audited plaque&quot; width=&quot;560&quot;&gt;&lt;/a&gt;</pre></details>
+</section>
+<section class="project">
+<a href="https://github.com/Dongdarealest/musekit"><img class="plaque" src="badges/Dongdarealest--musekit-plaque.svg" alt="MuseKit audited plaque" width="560"></a>
+<h2><a href="https://github.com/Dongdarealest/musekit">MuseKit</a></h2>
+<p class="stats">Health 100 of 100 · 6 skills · Verified 2026-11-22</p>
+<p class="links"><span class="pill">Current</span><a href="https://github.com/Dongdarealest/musekit">Homepage</a> · <a href="https://github.com/Dongdarealest/musekit">Repository</a></p>
+<details><summary>This project's live badge and plaque</summary>
+<pre>[![Audited by SkillDoctor](https://dongdarealest.github.io/skilldoctor/badges/Dongdarealest--musekit.svg)](https://dongdarealest.github.io/skilldoctor/)
+
+&lt;a href=&quot;https://dongdarealest.github.io/skilldoctor/&quot;&gt;&lt;img src=&quot;https://dongdarealest.github.io/skilldoctor/badges/Dongdarealest--musekit-plaque.svg&quot; alt=&quot;SkillDoctor audited plaque&quot; width=&quot;560&quot;&gt;&lt;/a&gt;</pre></details>
+</section>
+</main>
+<footer>
+<p>Run by <a href="https://github.com/Dongdarealest/skilldoctor">SkillDoctor</a>. How listing and verification work: <a href="https://github.com/Dongdarealest/skilldoctor/blob/main/REGISTRY.md">REGISTRY.md</a>. The machine readable state is <a href="registry.json">registry.json</a>. Last rebuilt 2026-11-22.</p>
+</footer>
+</div>
+<script>
+(function () {
+  var SITE = "https://dongdarealest.github.io/skilldoctor";
+  function parseRepo(raw) {
+    var s = raw.trim();
+    s = s.replace(/^https?:\/\/github\.com\//, "").replace(/\/$/, "").replace(/\.git$/, "");
+    var parts = s.split("/");
+    if (parts.length !== 2) { return null; }
+    var ok = /^[A-Za-z0-9_.-]+$/;
+    if (!ok.test(parts[0]) || !ok.test(parts[1])) { return null; }
+    return parts;
+  }
+  var button = document.getElementById("repo-go");
+  button.addEventListener("click", function () {
+    var parts = parseRepo(document.getElementById("repo-input").value);
+    var out = document.getElementById("repo-out");
+    var err = document.getElementById("repo-error");
+    if (!parts) { out.hidden = true; err.hidden = false; return; }
+    err.hidden = true;
+    var base = SITE + "/badges/" + parts[0] + "--" + parts[1];
+    document.getElementById("badge-snippet").textContent =
+      "[![Audited by SkillDoctor](" + base + ".svg)](" + SITE + "/)";
+    document.getElementById("plaque-snippet").textContent =
+      '<a href="' + SITE + '/"><img src="' + base +
+      '-plaque.svg" alt="SkillDoctor audited plaque" width="560"></a>';
+    out.hidden = false;
+  });
+})();
+</script>
+</body>
+</html>
