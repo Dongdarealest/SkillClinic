@@ -1,30 +1,58 @@
 # The SkillDoctor registry
 
-This registry is the public record of projects that have passed a SkillDoctor audit. A project appears here only after its audit has been verified by the maintainers of this repo.
+This registry is the public record of projects that have passed a SkillDoctor audit. It lives at [dongdarealest.github.io/skilldoctor](https://dongdarealest.github.io/skilldoctor/), and most projects in it got there by themselves: they wore the badge, and the registry found them.
 
 ## The badge is not the proof
 
-Anyone can paste a badge or a plaque image into a README, so the picture alone proves nothing. The proof is the entry on this page. If a project wears the badge but is not listed here, or its listing shows a different score or date, the badge is decoration, not a result.
+Anyone can paste a badge or a plaque image into a README, so the picture alone proves nothing. The proof is the entry in this registry. If a project wears the badge but is not listed here, or its listing shows a different score or date, the badge is decoration, not a result.
 
-## How verification works
+## Wear the badge, get listed
 
-1. The project runs the audit with the badge flag: `skilldoctor ~/path/to/skills --write-badge`. On a passing audit this writes the badge, the plaque and `skilldoctor-report.json` into the audited folder. The report carries the SHA-256 hash of every audited SKILL.md, the health score, the verdict counts and the audit date.
-2. The project asks for a listing and shares the report, or a link to its public repo.
-3. The maintainers re-run the audit on the public repo and compare. The verdicts, the health score and the file hashes must match the submitted report. Only then is the entry added below, with the verified date and result.
+Enrollment is one paste. Your badge address carries your own GitHub identity, and nobody issues it to you:
 
-An entry records the state of a project on its audit date. Changes made after that date are not covered until the project is audited and verified again.
+```
+https://dongdarealest.github.io/skilldoctor/badges/<owner>--<repo>.svg
+```
 
-## How to ask for a listing
+Build it from your owner and repo names, or use the generator at the top of the [registry page](https://dongdarealest.github.io/skilldoctor/), which builds the ready to paste badge and plaque snippets from a repo name. Paste the snippet into your README. That is the whole enrollment; there is no submission step.
 
-Open an issue in this repo and attach your `skilldoctor-report.json`, or link your public repo and say where the report lives. Either one works; both together is fastest.
+A scheduled workflow (`.github/workflows/registry-verify.yml`, running `tools/registry_build.py`) then does the rest, every day:
+
+1. It searches GitHub code search for the badge address and reads the owner and repo out of every address it finds. Repos not yet listed are enrolled on the spot.
+2. It audits every listed repo from a fresh clone. Discovered repos are audited at their root, where the tool finds skills recursively; projects listed by hand can name a folder instead.
+3. It regenerates each project's badge and plaque from the latest result and republishes this registry.
+
+One scoring rule applies to everyone: the score on the plaque is the health score the audit reports for the project's audit path, nothing else.
+
+Two honest delays. The badge activates at the next daily verification run after it is pasted, and GitHub code search indexing can delay discovery of a brand new badge by some hours. A badge pasted today is normally live tomorrow.
+
+## States, and leaving
+
+- **Current**: the latest daily audit passes. The images show the current score, the skill count and the verification month.
+- **Recheck needed**: the latest daily audit fails, or the repo cannot be cloned or audited. The images flip to a grey recheck design with no score, and the registry entry says why. An old score is never silently kept: a project that stops passing stops showing it, and flips back the day it passes again.
+- **Dropped**: take the badge address out of your README and the next run removes the entry and its generated images. Projects listed by hand are removed the same way by the maintainers, on request.
+
+The workflow searches with the token the maintainers give it. A dedicated search token can be supplied as the `REGISTRY_SEARCH_TOKEN` repository secret; without one, the workflow's own token is used.
+
+## Listing by hand
+
+A project that wants a human check first, or a listing at a chosen folder instead of the repo root, can still ask:
+
+1. Run the audit with the badge flag: `skilldoctor ~/path/to/skills --write-badge`. On a passing audit this writes the badge, the plaque and `skilldoctor-report.json` into the audited folder. The report carries the SHA-256 hash of every audited SKILL.md, the health score, the verdict counts and the audit date.
+2. Open an issue in this repo and attach the report, or link your public repo and say where the report lives.
+3. The maintainers re-run the audit on the public repo and compare. The verdicts, the health score and the file hashes must match the submitted report. Only then is the project added to `registry/projects.json` by hand.
+
+The static files that `--write-badge` writes remain useful as a dated snapshot, for a launch announcement or offline use. They go stale when the skills change; the live badge cannot, because it speaks for the state of the repo at the last daily check, and says so.
+
+## The plain mark
+
+The mark at `https://dongdarealest.github.io/skilldoctor/badges/audited.svg` is the plain SkillDoctor symbol. It carries no score, names no repo, and enrolls nothing. Only a personal address is an enrollment.
 
 ## Verified entries
 
+The living record, with current scores and states, is the registry site. The first entries, enrolled by hand on the date shown, were:
+
 | Project | Audited | Result |
 | --- | --- | --- |
-| [SkillPort](https://github.com/Dongdarealest/skillport) | 2026-11-22 | 15 skills across 5 packs, 0 failures. Pack health scores: 100, 100, 100, 100 and 92 |
-| [MuseKit](https://github.com/Dongdarealest/musekit) | 2026-11-22 | 6 skills, 0 failures. Health score 100 |
-
-## Freshness
-
-A registry entry is a point in time verification, not a lifetime grade. Each entry is bound to the exact audited files through the SHA-256 hashes in the submitted report. When a listed project changes its audited skills, its printed score describes the earlier state, and the entry counts as stale until the project is re-verified. Every entry shows its verification date so readers can judge freshness for themselves. Re-verification is free: submit a fresh report and the maintainers re-run the audit and update the entry.
+| [SkillPort](https://github.com/Dongdarealest/skillport) | 2026-11-22 | Audited at its packs folder: 30 skills, 0 failures. Health score 98 |
+| [MuseKit](https://github.com/Dongdarealest/musekit) | 2026-11-22 | Audited at its starter-skills folder: 6 skills, 0 failures. Health score 100 |
