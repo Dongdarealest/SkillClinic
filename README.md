@@ -1,48 +1,34 @@
-# SkillDoctor
+<p align="center">
+  <img src="assets/masthead.png" alt="SkillDoctor: a checkup for the skills your AI runs" width="880">
+</p>
 
-**Your AI is running skills you never audited.**
+<p align="center">
+  <a href="https://github.com/Dongdarealest/skilldoctor/releases"><img src="https://img.shields.io/github/v/release/Dongdarealest/skilldoctor?style=flat-square&color=141414&label=release" alt="Latest release"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-141414?style=flat-square" alt="MIT license"></a>
+  <img src="https://img.shields.io/badge/python-3.8%2B-141414?style=flat-square" alt="Python 3.8 or newer">
+  <img src="https://img.shields.io/badge/dependencies-zero-141414?style=flat-square" alt="Zero dependencies">
+</p>
 
-SkillDoctor is a small, zero dependency command line tool that audits the
-AI skill files (SKILL.md) already installed on your machine. It checks
-every skill it finds for validity, security risks, conflicts, and token
-cost, then prints one clear report with a verdict per skill: OK, WARN, or
-FAIL.
+Skills are instructions your AI loads and follows, often at the start of every conversation. Most people install them from repositories, gists, and chat messages without ever reading them. SkillDoctor reads them for you: one command audits every skill on your machine and gives each one a verdict.
 
-Skills are powerful. A skill is a set of instructions your AI host loads
-and follows, often at the start of every conversation. Most people install
-them from repositories, gists, and chat messages without ever reading
-them. SkillDoctor reads them for you.
+<p align="center">
+  <img src="assets/demo.png" alt="SkillDoctor demo output: one clean skill passes, an invalid skill and a risky skill fail with reasons" width="880">
+</p>
+
+<p align="center"><em>The bundled demo: one clean skill passes, two fail, every failure with its reason.</em></p>
 
 ## What it checks
 
-**Validity**
-- The YAML frontmatter parses cleanly.
-- The required fields, name and description, are present.
-- The name is kebab-case and matches the folder the skill lives in.
-
-**Security**
-- Shell pipes from the network, such as a download fed straight into bash.
-- Instructions that touch credential stores: .env files, ~/.ssh, id_rsa,
-  cloud keys, keychains.
-- Language that tells the host to send or upload user files and data to an
-  external destination.
-- Prompt override phrases that tell the host to ignore its instructions.
-- Long base64 blobs that no human can inspect at a glance.
-- Mentions of API keys, tokens, passwords, and destructive shell commands.
-
-**Conflicts**
-- The same skill name installed in more than one host folder, so you never
-  know which copy actually loads.
-- Near-duplicate descriptions on different skills, which makes hosts load
-  the wrong skill for a request.
-
-**Token cost**
-- An estimate of the tokens each skill adds, and the total always-on cost
-  of everything installed. Bloated skills tax every conversation you have.
+| Check | What it catches |
+| --- | --- |
+| Validity | Frontmatter that does not parse, missing name or description, names that are not kebab-case or do not match their folder |
+| Security | Downloads piped into a shell, instructions touching credential stores, language that sends user data out, prompt override phrases, uninspectable base64 blobs, destructive commands |
+| Conflicts | The same skill name installed in several host folders, near-duplicate descriptions that make hosts load the wrong skill |
+| Token cost | The estimated tokens each skill adds, and the total always-on cost loaded into every conversation |
 
 ## Quick start
 
-You need Python 3.8 or newer. There is nothing to install.
+Python 3.8 or newer, nothing to install.
 
 ```bash
 # Audit the skill folders on this machine
@@ -58,82 +44,25 @@ python3 skilldoctor.py ~/path/to/skills
 python3 skilldoctor.py --json
 ```
 
-By default SkillDoctor scans these locations when they exist:
-`~/.claude/skills`, `~/.cursor/skills`, `~/.codex/skills`, and
-`~/.config/claude/skills`. Pass one or more paths to scan somewhere else.
+SkillDoctor looks in `~/.claude/skills`, `~/.cursor/skills`, `~/.codex/skills`, and `~/.config/claude/skills` when they exist. It reads files and changes nothing.
 
-The exit code is 1 when any skill earns a FAIL, and 0 otherwise, so it
-drops straight into a CI job or a pre-commit check.
+## Reading the report
 
-SkillDoctor is read only. It never modifies, moves, or deletes the files
-it audits.
-
-## Example output
-
-```text
-SkillDoctor 0.1.0
-Scanned: examples
-
-FAIL  Invalid_Skill Name
-      folder: examples/invalid-skill
-      tokens: ~67
-      - [error] missing required field: description
-      - [error] name is not kebab-case: Invalid_Skill Name
-      - [error] name 'Invalid_Skill Name' does not match its folder 'invalid-skill'
-
-OK    clean-skill
-      folder: examples/clean-skill
-      tokens: ~175
-
-FAIL  risky-skill
-      folder: examples/risky-skill
-      tokens: ~210
-      - [high] security: skill pipes a network download straight into a shell
-      - [high] security: skill tells the host to ignore its previous instructions
-      - [high] security: skill instructs sending user data to an external destination
-      - [high] security: skill instructs reading or sending credential material
-      - [warn] security: skill references a credential store
-      - [warn] security: skill mentions API keys, tokens, or passwords
-      - [warn] security: skill contains a long base64 blob that a reader cannot inspect
-
-Summary: 3 skills, 1 OK, 0 WARN, 2 FAIL
-Always-on token cost: ~452 tokens loaded into every conversation
-```
-
-The three example skills live in the `examples/` folder: one clean, one
-invalid, one risky. Run `python3 skilldoctor.py --demo` to audit them.
+- **OK**: the skill parses, identifies itself properly, and shows no risky patterns.
+- **WARN**: worth a human look, for example a reference to a credential store or a very long file.
+- **FAIL**: broken or dangerous. The report exits with code 1 when any skill fails, so it drops straight into CI.
 
 ## Why this exists
 
-Skill collections grow fast, and quality control has not kept up. Audits
-of popular skill repositories keep finding the same story: a meaningful
-share of published skills are invalid, with broken frontmatter, missing
-fields, and names that do not match their folders, and a smaller share
-carry genuinely risky instructions, from credential snooping to silent
-uploads. Hosts load these files trustingly, and users rarely see them at
-all.
-
-SkillDoctor is the ten second check that should happen before a skill is
-trusted: is it well formed, is it safe to follow, does it fight with
-anything else installed, and what does it cost you on every single
-conversation.
-
-## Development
-
-Run the test suite with the standard library only:
-
-```bash
-python3 -m unittest discover -s tests -v
-```
-
-Contributions are welcome. The bar is simple: zero dependencies, read
-only behavior, and a test for every new check.
+Public skill collections are growing faster than anyone can review them, and audits of popular collections keep finding files that are invalid, duplicated, or carry instructions no user would accept if they read them. Installing a skill is trusting a stranger's instructions inside your own AI. A checkup should take ten seconds, so here it is.
 
 ## Support
 
-SkillDoctor is free and MIT licensed. If it saved you from one bad skill,
-you can support the work on [GitHub Sponsors](https://github.com/sponsors/Dongdarealest)
-or [Ko-fi](https://ko-fi.com/dongdarealest).
+SkillDoctor is free and MIT licensed. If it saved you from one bad install, you can [sponsor the work on GitHub](https://github.com/sponsors/Dongdarealest) or [buy me a coffee on Ko-fi](https://ko-fi.com/dongdarealest).
+
+## Contributing
+
+New checks are the most welcome contributions, especially patterns for risks this version does not catch yet. Open an issue with the skill that slipped through, or send a pull request with a test that proves the new check works.
 
 ## License
 
