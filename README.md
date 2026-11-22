@@ -71,11 +71,25 @@ Nothing is deleted outright. Failed skills move to `~/.skilldoctor/quarantine` i
 
 ## Show your audit
 
-Publish skills of your own? If your collection passes a SkillDoctor audit, say so where people can see it:
+Publish skills of your own? If your collection passes a SkillDoctor audit, say so where people can see it. This is the badge on a repo, linked back here:
+
+[![Audited by SkillDoctor](https://img.shields.io/badge/skills-audited%20by%20SkillDoctor-141414?style=flat-square)](https://github.com/Dongdarealest/skilldoctor)
+
+Paste this into your README and it renders as the badge above:
 
 ```markdown
 [![Audited by SkillDoctor](https://img.shields.io/badge/skills-audited%20by%20SkillDoctor-141414?style=flat-square)](https://github.com/Dongdarealest/skilldoctor)
 ```
+
+## In CI, and as a GitHub Action
+
+This repo doubles as a GitHub Action, so a collection can audit itself on every push:
+
+```yaml
+- uses: Dongdarealest/skilldoctor@v0.2.1
+```
+
+It fails the build when any skill fails the audit. Anywhere else, the plain command does the same job in CI: `python3 skilldoctor.py --json` for machines, exit code 1 on any FAIL.
 
 ## Why this exists
 

@@ -1,0 +1,17 @@
+name: SkillDoctor
+description: Audit the AI skill files in a repository for validity, security risks, conflicts, and token cost.
+author: Dongdarealest
+branding:
+  icon: activity
+  color: gray-dark
+inputs:
+  path:
+    description: Folder to audit. Defaults to the repository root.
+    required: false
+    default: "."
+runs:
+  using: composite
+  steps:
+    - name: Run SkillDoctor
+      shell: bash
+      run: python3 "${{ github.action_path }}/skilldoctor.py" "${{ inputs.path }}"
