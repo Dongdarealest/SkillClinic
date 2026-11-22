@@ -10,9 +10,11 @@
       "badge": "badges/Dongdarealest--skillport.svg",
       "plaque": "badges/Dongdarealest--skillport-plaque.svg",
       "status": "current",
+      "state": "current",
       "score": 98,
       "skills": 30,
       "failures": 0,
+      "samples": 0,
       "note": null
     },
     {
@@ -24,10 +26,28 @@
       "badge": "badges/Dongdarealest--musekit.svg",
       "plaque": "badges/Dongdarealest--musekit-plaque.svg",
       "status": "current",
+      "state": "current",
       "score": 100,
       "skills": 6,
       "failures": 0,
+      "samples": 0,
       "note": null
+    },
+    {
+      "slug": "Dongdarealest--skilldoctor",
+      "name": "SkillDoctor",
+      "repo": "https://github.com/Dongdarealest/skilldoctor",
+      "homepage": "https://github.com/Dongdarealest/skilldoctor",
+      "verified": "2026-11-22",
+      "badge": "badges/Dongdarealest--skilldoctor.svg",
+      "plaque": "badges/Dongdarealest--skilldoctor-plaque.svg",
+      "status": "neutral",
+      "state": "neutral",
+      "score": null,
+      "skills": 0,
+      "failures": 0,
+      "samples": 3,
+      "note": "Sample data only, listed as not audited."
     }
   ]
 }

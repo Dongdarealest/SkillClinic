@@ -76,10 +76,11 @@ def project(audit_path="skills", slug="fixture--proj", source="listed"):
     }
 
 
-def payload(total, fail, health):
+def payload(total, fail, health, samples=0):
     return {
         "summary": {"total": total, "ok": total - fail, "warn": 0, "fail": fail},
         "health_score": health,
+        "not_audited_samples": [{"name": "sample-%d" % i} for i in range(samples)],
     }
 
 
@@ -87,19 +88,30 @@ class SummarizeTests(unittest.TestCase):
     def test_passing_payload_is_current_with_its_health_score(self):
         result = rb.summarize(payload(15, 0, 98))
         self.assertEqual(result["status"], "current")
+        self.assertEqual(result["state"], "current")
         self.assertEqual(result["score"], 98)
         self.assertEqual(result["skills"], 15)
 
     def test_any_failure_is_a_recheck(self):
         result = rb.summarize(payload(6, 1, 60))
         self.assertEqual(result["status"], "recheck")
+        self.assertEqual(result["state"], "recheck")
         self.assertIsNone(result["score"])
         self.assertEqual(result["failures"], 1)
 
-    def test_no_skills_is_a_recheck(self):
+    def test_no_skills_is_neutral(self):
         result = rb.summarize(payload(0, 0, None))
-        self.assertEqual(result["status"], "recheck")
+        self.assertEqual(result["status"], "neutral")
+        self.assertEqual(result["state"], "neutral")
         self.assertEqual(result["skills"], 0)
+        self.assertEqual(result["samples"], 0)
+        self.assertIsNone(result["score"])
+
+    def test_no_skills_with_samples_is_neutral_and_counts_them(self):
+        result = rb.summarize(payload(0, 0, None, samples=3))
+        self.assertEqual(result["state"], "neutral")
+        self.assertEqual(result["samples"], 3)
+        self.assertIn("not audited", result["note"])
 
 
 class VerifyLocalTests(unittest.TestCase):
@@ -145,7 +157,34 @@ class VerifyLocalTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             entry = rb.verify_local(project("nope"), tmp, WHEN)
             self.assertEqual(entry["status"], "recheck")
+            self.assertEqual(entry["state"], "recheck")
             self.assertIn("not found", entry["note"])
+
+    def test_repo_with_only_sample_fixtures_is_neutral(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            folder = os.path.join(tmp, "examples", "broken-fixture")
+            os.makedirs(folder)
+            with open(os.path.join(folder, "SKILL.md"), "w", encoding="utf-8") as fh:
+                fh.write(BROKEN)
+            entry = rb.verify_local(project("."), tmp, WHEN)
+            self.assertEqual(entry["status"], "neutral")
+            self.assertEqual(entry["state"], "neutral")
+            self.assertIsNone(entry["score"])
+            self.assertEqual(entry["skills"], 0)
+            self.assertEqual(entry["samples"], 1)
+
+    def test_samples_do_not_count_against_a_real_collection(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            write_skill(os.path.join(tmp, "skills"), "alpha")
+            folder = os.path.join(tmp, "examples", "broken-fixture")
+            os.makedirs(folder)
+            with open(os.path.join(folder, "SKILL.md"), "w", encoding="utf-8") as fh:
+                fh.write(BROKEN)
+            entry = rb.verify_local(project("."), tmp, WHEN)
+            self.assertEqual(entry["state"], "current")
+            self.assertEqual(entry["score"], 100)
+            self.assertEqual(entry["skills"], 1)
+            self.assertEqual(entry["samples"], 1)
 
 
 class ParseIdentitiesTests(unittest.TestCase):
@@ -284,6 +323,24 @@ class ImageTests(unittest.TestCase):
         self.assertIn("Recheck needed", plaque)
         self.assertIn("#8A8680", plaque)
 
+    def test_neutral_badge_is_gold_and_reads_no_skills(self):
+        entry = {"status": "neutral", "state": "neutral", "score": None, "skills": 0, "samples": 2}
+        badge = rb.badge_for(entry, WHEN)
+        self.assertIn("NO SKILLS", badge)
+        self.assertIn("#C9A35F", badge)
+
+    def test_neutral_plaque_explains_sample_fixtures(self):
+        entry = {"status": "neutral", "state": "neutral", "score": None, "skills": 0, "samples": 3}
+        plaque = rb.plaque_for(entry, WHEN)
+        self.assertIn("No skills to audit", plaque)
+        self.assertIn("Sample fixtures only, listed as not audited.", plaque)
+
+    def test_neutral_plaque_without_samples_says_none_found(self):
+        entry = {"status": "neutral", "state": "neutral", "score": None, "skills": 0, "samples": 0}
+        plaque = rb.plaque_for(entry, WHEN)
+        self.assertIn("No skills to audit", plaque)
+        self.assertIn("No skills found in this repo.", plaque)
+
 
 class WriteSiteTests(unittest.TestCase):
     def entry(self, slug="Alice--tools", status="current", score=90):
@@ -296,9 +353,11 @@ class WriteSiteTests(unittest.TestCase):
             "badge": "badges/%s.svg" % slug,
             "plaque": "badges/%s-plaque.svg" % slug,
             "status": status,
+            "state": status,
             "score": score,
             "skills": 4,
             "failures": 0,
+            "samples": 0,
             "note": None,
         }
 
@@ -354,9 +413,11 @@ class PageContentTests(unittest.TestCase):
             "badge": "badges/%s.svg" % slug,
             "plaque": "badges/%s-plaque.svg" % slug,
             "status": status,
+            "state": status,
             "score": score,
             "skills": 4,
             "failures": 0,
+            "samples": 0,
             "note": None,
         }
 
@@ -416,6 +477,15 @@ class PageContentTests(unittest.TestCase):
         self.assertIn("re-verified daily", self.page)
         self.assertIn("removes the listing", self.page)
         self.assertIn("code search indexing lags", self.page)
+
+    def test_neutral_entry_renders_with_its_own_label(self):
+        entry = self.entry(slug="Fixture--plain", status="neutral", score=None)
+        entry["skills"] = 0
+        entry["samples"] = 2
+        page = rb.render_index([entry], WHEN)
+        self.assertIn("No skills", page)
+        self.assertIn("No auditable skills · Verified 2026-11-22", page)
+        self.assertIn("Fixture--plain-plaque.svg", page)
 
 
 if __name__ == "__main__":

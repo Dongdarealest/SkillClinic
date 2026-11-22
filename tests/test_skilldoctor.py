@@ -475,14 +475,15 @@ class DistributionCopyConflictTests(unittest.TestCase):
                 self.assertFalse(any(f.kind == "conflict" for f in r.findings))
                 self.assertEqual(r.verdict, "OK")
 
-    def test_examples_copy_in_one_tree_is_not_a_conflict(self):
+    def test_examples_copy_in_one_tree_is_sample_data_not_a_conflict(self):
         with tempfile.TemporaryDirectory() as tmp:
             write_skill(os.path.join(tmp, "examples"), "packed", self.BODY)
             write_skill(os.path.join(tmp, "packs", "demo-pack", "skills"), "packed", self.BODY)
-            reports = sd.scan([tmp])
-            self.assertEqual(len(reports), 2)
-            for r in reports:
-                self.assertFalse(any(f.kind == "conflict" for f in r.findings))
+            reports, samples = sd.scan_all([tmp])
+            self.assertEqual(len(reports), 1)
+            self.assertEqual(reports[0].verdict, "OK")
+            self.assertFalse(any(f.kind == "conflict" for f in reports[0].findings))
+            self.assertEqual([s.name for s in samples], ["packed"])
 
     def test_plain_duplicates_in_ordinary_folders_still_flag(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -516,6 +517,71 @@ class TemplateSkipTests(unittest.TestCase):
             )
             reports = sd.scan([tmp])
             self.assertEqual([r.name for r in reports], ["real-skill"])
+
+
+class SampleDataTests(unittest.TestCase):
+    BAD = "---\nname: Wrong_Name\n---\n\nNo description here.\n"
+
+    def test_bad_skills_under_examples_score_zero_and_are_listed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            write_skill(os.path.join(tmp, "examples"), "bad-one", self.BAD)
+            write_skill(os.path.join(tmp, "examples"), "bad-two", self.BAD)
+            reports, samples = sd.scan_all([tmp])
+            self.assertEqual(reports, [])
+            self.assertEqual([s.name for s in samples], ["bad-one", "bad-two"])
+            payload = sd.build_payload(reports, [tmp], samples)
+            self.assertEqual(payload["summary"]["total"], 0)
+            self.assertIsNone(payload["health_score"])
+            listed = payload["not_audited_samples"]
+            self.assertEqual([s["name"] for s in listed], ["bad-one", "bad-two"])
+            text = sd.render_text(reports, [tmp], samples)
+            self.assertIn("Not audited (sample data): bad-one, bad-two", text)
+            self.assertIn("never scored", text)
+
+    def test_the_same_skills_in_a_normal_folder_still_fail(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            write_skill(os.path.join(tmp, "installed"), "bad-one", self.BAD)
+            reports, samples = sd.scan_all([tmp])
+            self.assertEqual(samples, [])
+            self.assertEqual(len(reports), 1)
+            self.assertEqual(reports[0].verdict, "FAIL")
+
+    def test_fixtures_and_testdata_are_sample_data_at_any_depth(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            write_skill(os.path.join(tmp, "Fixtures"), "bad-one", self.BAD)
+            write_skill(os.path.join(tmp, "deep", "TESTDATA", "more"), "bad-two", self.BAD)
+            write_skill(os.path.join(tmp, "installed"), "good-one",
+                        "---\nname: good-one\ndescription: A tidy skill.\n---\n\nBe tidy.\n")
+            reports, samples = sd.scan_all([tmp])
+            self.assertEqual([r.name for r in reports], ["good-one"])
+            self.assertEqual([s.name for s in samples], ["bad-one", "bad-two"])
+
+    def test_samples_do_not_drag_down_a_real_score(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            write_skill(os.path.join(tmp, "examples"), "bad-one", self.BAD)
+            write_skill(os.path.join(tmp, "skills"), "good-one",
+                        "---\nname: good-one\ndescription: A tidy skill.\n---\n\nBe tidy.\n")
+            reports, samples = sd.scan_all([tmp])
+            payload = sd.build_payload(reports, [tmp], samples)
+            self.assertEqual(payload["health_score"], 100)
+            self.assertEqual(payload["summary"], {"total": 1, "ok": 1, "warn": 0, "fail": 0})
+            self.assertEqual(len(payload["not_audited_samples"]), 1)
+
+    def test_pointing_straight_at_a_sample_folder_still_audits_it(self):
+        reports = sd.scan([EXAMPLES])
+        self.assertEqual(len(reports), 3)
+
+    def test_the_real_examples_are_samples_in_a_repo_root_scan(self):
+        repo_root = os.path.dirname(HERE)
+        reports, samples = sd.scan_all([repo_root])
+        self.assertEqual(reports, [])
+        self.assertEqual(
+            [s.name for s in samples],
+            ["clean-skill", "invalid-skill", "risky-skill"],
+        )
+        payload = sd.build_payload(reports, [repo_root], samples)
+        self.assertEqual(payload["summary"]["total"], 0)
+        self.assertEqual(len(payload["not_audited_samples"]), 3)
 
 
 class BadgeTests(unittest.TestCase):

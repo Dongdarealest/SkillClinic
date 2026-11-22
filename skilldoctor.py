@@ -48,7 +48,7 @@ import shutil
 import sys
 from datetime import datetime
 
-VERSION = "0.4.1"
+VERSION = "0.4.2"
 
 DEFAULT_LOCATIONS = [
     "~/.claude/skills",
@@ -78,6 +78,17 @@ AUDIT_FILE_CAP = 256 * 1024
 # skills: a template ships a placeholder name that matches nothing yet,
 # so auditing one would only report noise. Discovery skips them.
 SCAFFOLD_DIRS = {"template", "templates"}
+
+# Folders with these names hold sample data: demo fixtures, worked
+# examples, test exhibits. A skill found under one during a tree scan
+# is an exhibit, not an installation, so it is never scored, never
+# given a verdict and never entered into the conflict checks. It is
+# collected and listed in the report as not audited instead, so the
+# exclusion stays visible rather than silent. The comparison runs
+# against the path from the scan root down to the skill's parent
+# folders, so pointing the tool straight at a sample folder still
+# audits its contents: that is exactly what --demo does.
+SAMPLE_DIRS = {"examples", "fixtures", "testdata"}
 
 # ---------------------------------------------------------------------------
 # Security patterns. Each entry: (compiled regex, severity, label).
@@ -765,18 +776,77 @@ def hint_for(message):
     return None
 
 
-def scan(roots):
+class SampleSkill:
+    """A skill folder found under a sample data folder during a scan.
+
+    Samples are exhibits, not installations: they carry no verdict and
+    no score, and exist in the report only so the exclusion is visible.
+    The name is the folder name; the contents are never read.
+    """
+
+    def __init__(self, folder, host):
+        self.folder = folder
+        self.host = host
+        self.path = os.path.join(folder, "SKILL.md")
+
+    @property
+    def name(self):
+        return os.path.basename(os.path.normpath(self.folder))
+
+    def to_dict(self):
+        return {
+            "name": self.name,
+            "folder": self.folder,
+            "host": self.host,
+            "path": self.path,
+        }
+
+
+def _is_sample_path(root, folder):
+    """True when a skill folder sits under a sample data folder.
+
+    The check runs over the components between the scan root and the
+    skill folder itself, at any depth, case insensitively. The skill
+    folder's own name is not a marker: a skill that happens to be
+    called "examples" is still a skill, while everything filed under
+    an examples/, fixtures/ or testdata/ folder is sample data.
+    """
+    try:
+        rel = os.path.relpath(folder, root)
+    except ValueError:
+        return False
+    parts = [p.lower() for p in rel.split(os.sep) if p not in ("", ".")]
+    return any(part in SAMPLE_DIRS for part in parts[:-1])
+
+
+def scan_all(roots):
+    """Scan roots and return (reports, samples).
+
+    Reports are the audited skills. Samples are the skill folders
+    found under sample data folders, collected unaudited.
+    """
     reports = []
+    samples = []
     seen = set()
     for root in roots:
+        root_abs = os.path.abspath(os.path.expanduser(root))
         for folder, host in find_skill_folders(root):
             key = os.path.normpath(folder)
             if key in seen:
                 continue
             seen.add(key)
-            reports.append(audit_skill(folder, host))
+            if _is_sample_path(root_abs, folder):
+                samples.append(SampleSkill(folder, host))
+            else:
+                reports.append(audit_skill(folder, host))
     reports.sort(key=lambda r: (r.name or "", r.folder))
+    samples.sort(key=lambda s: s.folder)
     apply_conflict_checks(reports)
+    return reports, samples
+
+
+def scan(roots):
+    reports, _samples = scan_all(roots)
     return reports
 
 
@@ -788,7 +858,8 @@ def display_path(path):
     return rel if not rel.startswith("..") else path
 
 
-def render_text(reports, roots):
+def render_text(reports, roots, samples=None):
+    samples = samples or []
     lines = []
     lines.append("SkillDoctor %s" % VERSION)
     shown = [display_path(os.path.abspath(os.path.expanduser(r))) for r in roots]
@@ -805,7 +876,7 @@ def render_text(reports, roots):
             mood = "Risky setup. Read the failures before your next session."
         lines.append(mood)
     lines.append("")
-    if not reports:
+    if not reports and not samples:
         lines.append("No skills found. Nothing to audit.")
         lines.append("")
         lines.append("SkillDoctor looked in the usual host folders. To audit a folder directly:")
@@ -836,6 +907,22 @@ def render_text(reports, roots):
         if r.not_audited:
             lines.append("      not audited: %s" % ", ".join(r.not_audited))
         lines.append("")
+    if samples:
+        lines.append(
+            "Not audited (sample data): %s"
+            % ", ".join(s.name for s in samples)
+        )
+        lines.append(
+            "      Skills under examples/, fixtures/ or testdata/ folders are "
+            "exhibits, not installations, so they are listed here and never scored."
+        )
+        lines.append("")
+    if not reports:
+        lines.append(
+            "Summary: 0 skills audited. Sample data is never scored, "
+            "so there is no health score for this scan."
+        )
+        return "\n".join(lines)
     lines.append(
         "Summary: %d skills, %d OK, %d WARN, %d FAIL"
         % (len(reports), counts["OK"], counts["WARN"], counts["FAIL"])
@@ -892,7 +979,7 @@ def render_text(reports, roots):
     return "\n".join(lines)
 
 
-def build_payload(reports, roots):
+def build_payload(reports, roots, samples=None):
     """The machine readable report as one dict, shared by --json and
     the report file --write-badge writes."""
     health = (
@@ -903,6 +990,7 @@ def build_payload(reports, roots):
         "audit_date": datetime.now().strftime("%Y-%m-%d"),
         "scanned": roots,
         "skills": [r.to_dict() for r in reports],
+        "not_audited_samples": [s.to_dict() for s in (samples or [])],
         "total_tokens": sum(r.tokens for r in reports),
         "total_always_on_tokens": sum(r.always_on_tokens for r in reports),
         "total_body_tokens": sum(r.body_tokens for r in reports),
@@ -917,7 +1005,7 @@ def build_payload(reports, roots):
     }
 
 
-def write_badge_files(reports, roots):
+def write_badge_files(reports, roots, samples=None):
     """Write the earned badge, plaque and report into the audited root.
 
     Only a passing audit (no FAIL verdicts) earns the badge. On a
@@ -944,7 +1032,7 @@ def write_badge_files(reports, roots):
         fh.write(plaque_svg("Health %d / 100" % health, sub_line) + "\n")
     report_path = os.path.join(root, "skilldoctor-report.json")
     with open(report_path, "w", encoding="utf-8") as fh:
-        json.dump(build_payload(reports, roots), fh, indent=2)
+        json.dump(build_payload(reports, roots, samples), fh, indent=2)
     return (
         "Badge written: %s (the small mark, for badge rows), %s (the large "
         "plaque, for a place of honor) and %s (attach it when you ask for "
@@ -1101,13 +1189,13 @@ def main(argv=None):
     else:
         roots = [p for p in DEFAULT_LOCATIONS if os.path.isdir(os.path.expanduser(p))]
 
-    reports = scan(roots)
+    reports, samples = scan_all(roots)
     if args.json:
-        print(json.dumps(build_payload(reports, roots), indent=2))
+        print(json.dumps(build_payload(reports, roots, samples), indent=2))
     else:
-        print(render_text(reports, roots))
+        print(render_text(reports, roots, samples))
     if args.write_badge:
-        note = write_badge_files(reports, roots)
+        note = write_badge_files(reports, roots, samples)
         print(note, file=sys.stderr if args.json else sys.stdout)
     if args.quarantine_failed and not args.json:
         quarantine_failed(reports, assume_yes=args.yes)
