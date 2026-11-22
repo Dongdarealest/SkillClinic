@@ -137,7 +137,15 @@ Full method, findings, and limits: [The State of Public Skills](AUDIT.md).
 
 ## Show your audit
 
-Publish skills of your own? A collection that passes the audit earns a live badge, an address that carries your own GitHub identity and serves the latest verification:
+Publish skills of your own? A collection that passes the audit earns this plaque:
+
+<p align="center">
+  <a href="https://github.com/Dongdarealest/skilldoctor/blob/main/REGISTRY.md"><img src="https://raw.githubusercontent.com/Dongdarealest/skilldoctor/main/assets/audited-plaque.svg" alt="The SkillDoctor audited plaque: the mark of a checked skill" width="560"></a>
+</p>
+
+Projects that pass the audit earn this plaque and the badge further down. The picture alone proves nothing, and anyone can paste one: the proof is the entry in the registry, kept live at [dongdarealest.github.io/skilldoctor](https://dongdarealest.github.io/skilldoctor/) and described in [REGISTRY.md](REGISTRY.md). Listings carry only the score their own repo's audit produced, a listing by hand is added only after the maintainers re-run the audit and the results match, and a daily re-audit keeps every listed badge honest after that.
+
+Yours is served live, plaque and badge alike, from an address that carries your own GitHub identity:
 
 ```
 https://skilldoctor-badges.vercel.app/badges/<owner>--<repo>.svg
@@ -155,7 +163,7 @@ This is a real one, SkillPort's badge, served live:
 
 [![Audited by SkillDoctor](https://skilldoctor-badges.vercel.app/badges/Dongdarealest--skillport.svg)](https://dongdarealest.github.io/skilldoctor/)
 
-The picture alone proves nothing, and anyone can paste one: the proof is the entry in the registry, where a listing carries only the score its own repo's audit produced. [REGISTRY.md](REGISTRY.md) describes how verification works. For announcements and offline use, `skilldoctor <folder> --write-badge` writes a dated static snapshot of the badge, the plaque, and the machine report instead; a failing audit writes nothing. The plain mark at [badges/audited.svg](https://skilldoctor-badges.vercel.app/badges/audited.svg) carries no score and enrolls nothing; only the personal address is an enrollment.
+[REGISTRY.md](REGISTRY.md) describes how verification works in full. For announcements and offline use, `skilldoctor <folder> --write-badge` writes a dated static snapshot of the badge, the plaque, and the machine report instead; a failing audit writes nothing. The plain mark at [badges/audited.svg](https://skilldoctor-badges.vercel.app/badges/audited.svg) carries no score and enrolls nothing; only the personal address is an enrollment.
 
 SkillDoctor wears the small badge in the row at the top of this page, and it does not flatter itself: this repo carries no skills of its own, only the demo fixtures under `examples/`, so its badge shows the no skills state, and those fixtures are listed as not audited in every report rather than scored.
 
@@ -164,7 +172,7 @@ SkillDoctor wears the small badge in the row at the top of this page, and it doe
 This repo doubles as a GitHub Action, so a collection can audit itself on every push:
 
 ```yaml
-- uses: Dongdarealest/skilldoctor@v0.4.3
+- uses: Dongdarealest/skilldoctor@v0.4.4
 ```
 
 It audits the repository (or the folder given in the `path` input) and fails the build when any skill fails. Anywhere else, the plain command does the same job in CI: `skilldoctor --json` for machines, exit code 1 on any FAIL.
