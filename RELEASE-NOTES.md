@@ -1,3 +1,7 @@
+## v0.3.3
+
+Getting in is easier. The Windows installer now creates a real skilldoctor command instead of leaving you to call the file by hand, and every release from now on ships standalone executables for Windows, macOS and Linux, so no Python installation is needed at all. The README action example points at this version.
+
 ## v0.3.2
 
 SkillDoctor now looks deeper. Real collections nest their skills a few folders down, and the scanner only looked one level deep, so pointing it at a collection root found nothing. It now walks the tree. The Windows install line also gets its own code block with a copy button, like the Mac and Linux one.

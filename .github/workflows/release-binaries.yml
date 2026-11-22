@@ -1,0 +1,37 @@
+name: Release binaries
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            name: skilldoctor-windows.exe
+          - os: macos-latest
+            name: skilldoctor-macos
+          - os: ubuntu-latest
+            name: skilldoctor-linux
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Build the standalone executable
+        run: |
+          pip install pyinstaller
+          pyinstaller --onefile --name skilldoctor skilldoctor.py
+      - name: Attach it to the release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ -f dist/skilldoctor.exe ]; then mv dist/skilldoctor.exe "${{ matrix.name }}"; else mv dist/skilldoctor "${{ matrix.name }}"; fi
+          gh release upload "${{ github.event.release.tag_name }}" "${{ matrix.name }}"
