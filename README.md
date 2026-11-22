@@ -58,7 +58,12 @@ Public skill collections are growing faster than anyone can review them, and aud
 
 ## Support
 
-SkillDoctor is free and MIT licensed. If it saved you from one bad install, you can [sponsor the work on GitHub](https://github.com/sponsors/Dongdarealest) or [buy me a coffee on Ko-fi](https://ko-fi.com/dongdarealest).
+SkillDoctor is free and MIT licensed. If it saved you from one bad install, a coffee keeps the next check coming.
+
+<p>
+  <a href="https://github.com/sponsors/Dongdarealest"><img src="https://img.shields.io/badge/GitHub%20Sponsors-141414?style=for-the-badge&logo=githubsponsors&logoColor=EA4AAA" alt="Sponsor on GitHub"></a>
+  <a href="https://ko-fi.com/dongdarealest"><img src="https://img.shields.io/badge/Ko--fi-141414?style=for-the-badge&logo=kofi&logoColor=FF5E5B" alt="Buy me a coffee on Ko-fi"></a>
+</p>
 
 ## Contributing
 
