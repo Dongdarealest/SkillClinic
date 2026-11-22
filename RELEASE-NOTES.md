@@ -1,3 +1,7 @@
+## v0.3.4
+
+SkillDoctor is on PyPI: pip install skilldoctor. Publishing now runs through PyPI trusted publishing from this repo's release workflow, with no stored token anywhere.
+
 ## v0.3.3
 
 Getting in is easier. The Windows installer now creates a real skilldoctor command instead of leaving you to call the file by hand, and every release from now on ships standalone executables for Windows, macOS and Linux, so no Python installation is needed at all. The README action example points at this version.

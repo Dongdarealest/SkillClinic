@@ -37,7 +37,7 @@ import shutil
 import sys
 from datetime import datetime
 
-VERSION = "0.3.3"
+VERSION = "0.3.4"
 
 DEFAULT_LOCATIONS = [
     "~/.claude/skills",
