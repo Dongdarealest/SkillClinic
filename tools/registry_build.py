@@ -4,7 +4,7 @@
 The registry enrolls itself. A project that wants a listing pastes a
 snippet whose image address carries its own GitHub identity:
 
-    https://dongdarealest.github.io/skilldoctor/badges/<owner>--<repo>.svg
+    https://skilldoctor-badges.vercel.app/badges/<owner>--<repo>.svg
 
 Each run of this script:
 
@@ -56,8 +56,17 @@ import skilldoctor as sd
 PROJECTS_FILE = os.path.join(ROOT, "registry", "projects.json")
 DOCS_DIR = os.path.join(ROOT, "docs")
 SITE_URL = "https://dongdarealest.github.io/skilldoctor"
-BADGE_MARKER = "dongdarealest.github.io/skilldoctor/badges/"
+# The one canonical badge address. Snippets, previews and the docs
+# build every badge URL from this base. The endpoint behind it always
+# answers with a real image (the pending design for a repo that has
+# not been audited yet), so a pasted badge never renders as a broken
+# image. The static files under docs/badges/ are data mirrors of the
+# same images, regenerated on every run.
+BADGE_BASE_URL = "https://skilldoctor-badges.vercel.app/badges/"
+BADGE_MARKER = "skilldoctor-badges.vercel.app/badges/"
+LEGACY_BADGE_MARKER = "dongdarealest.github.io/skilldoctor/badges/"
 GENERIC_BADGE = "audited.svg"
+GENERIC_PLAQUE = "audited-plaque.svg"
 
 INK = "#141414"
 EDGE = "#2E2E2E"
@@ -123,8 +132,9 @@ def summarize(payload):
 # ---------------------------------------------------------------------------
 
 IDENTITY_RE = re.compile(
-    r"dongdarealest\.github\.io/skilldoctor/badges/"
-    r"([A-Za-z0-9_.-]+?)--([A-Za-z0-9_.-]+?)(?:-plaque)?\.svg"
+    r"(?:skilldoctor-badges[.]vercel[.]app|"
+    r"dongdarealest[.]github[.]io/skilldoctor)/badges/"
+    r"([A-Za-z0-9_.-]+?)--([A-Za-z0-9_.-]+?)(?:-plaque)?[.]svg"
 )
 
 
@@ -143,15 +153,9 @@ def parse_identities(texts):
     return found
 
 
-def github_search_texts(token):
-    """Return the text blobs code search reports for the badge marker.
-
-    Uses the text match fragments when GitHub sends them and falls
-    back to fetching a matched file's contents when it does not.
-    Raises on any HTTP failure, so the caller can skip discovery for
-    this run instead of mistaking an outage for an empty registry.
-    """
-    query = urllib.parse.urlencode({"q": '"%s"' % BADGE_MARKER, "per_page": 100})
+def _search_marker_texts(marker, token):
+    """Text blobs code search reports for one badge marker."""
+    query = urllib.parse.urlencode({"q": '"%s"' % marker, "per_page": 100})
     texts = []
     page = 1
     while page <= 10:
@@ -179,6 +183,22 @@ def github_search_texts(token):
         if len(items) < 100:
             break
         page += 1
+    return texts
+
+
+def github_search_texts(token):
+    """Return the text blobs code search reports for the badge markers.
+
+    Searches the canonical endpoint marker and the legacy Pages
+    marker, so badges pasted under either address enroll. Uses the
+    text match fragments when GitHub sends them and falls back to
+    fetching a matched file's contents when it does not. Raises on
+    any HTTP failure, so the caller can skip discovery for this run
+    instead of mistaking an outage for an empty registry.
+    """
+    texts = []
+    for marker in (BADGE_MARKER, LEGACY_BADGE_MARKER):
+        texts.extend(_search_marker_texts(marker, token))
     return texts
 
 
@@ -415,6 +435,20 @@ def recheck_plaque_svg(when):
     )
 
 
+def generic_plaque_svg():
+    """The generic plaque: the design every earned plaque follows.
+
+    The same artwork as the repo asset assets/audited-plaque.svg,
+    generated here so the site copy can never drift from the design
+    the tool itself writes.
+    """
+    return sd.plaque_svg(
+        "The mark of a checked skill",
+        "Earned by passing the audit. Verified in the registry.",
+        fit=True,
+    )
+
+
 def badge_for(entry, when):
     if entry["status"] == "current":
         return sd.badge_svg(
@@ -436,7 +470,8 @@ def plaque_for(entry, when):
 # ---------------------------------------------------------------------------
 # The page. Pre-rendered on every run: what the generator writes is
 # what the visitor gets, apart from one small script that builds a
-# snippet from a repo name the visitor types.
+# snippet from a repo name the visitor types and points the badge and
+# plaque previews at that repo's own addresses.
 # ---------------------------------------------------------------------------
 
 PAGE_CSS = """
@@ -496,6 +531,50 @@ pre {
 footer { color: #8A8680; font-size: 13px; margin-top: 48px; }
 footer a { color: #C9A35F; text-decoration: none; }
 footer a:hover { text-decoration: underline; }
+.hero .brand {
+  display: flex; align-items: center; gap: 12px;
+  font-size: 22px; font-weight: 600; letter-spacing: 1px; margin: 0 0 20px;
+}
+.hero h1 { font-size: 30px; line-height: 1.3; margin: 0 0 12px; }
+.hero .sub { color: #8A8680; font-size: 15px; max-width: 640px; margin: 0 0 26px; }
+img.plaque { max-width: 100%; height: auto; display: block; }
+.preview { border-top: 1px solid #2E2E2E; margin-top: 22px; padding-top: 20px; }
+.preview .preview-label { font-size: 13px; color: #8A8680; margin: 0 0 12px; }
+.preview img.badge { display: block; margin: 0 0 14px; }
+section.block { margin: 0 0 28px; }
+section.block > p { color: #8A8680; font-size: 14px; }
+.steps { list-style: none; counter-reset: step; padding: 0; margin: 0; }
+.steps li {
+  counter-increment: step; position: relative;
+  padding: 2px 0 16px 52px; font-size: 14px; color: #8A8680;
+}
+.steps li::before {
+  content: counter(step); position: absolute; left: 0; top: 0;
+  width: 34px; height: 34px; border: 1px solid #C9A35F; border-radius: 50%;
+  color: #C9A35F; text-align: center; line-height: 34px; font-size: 15px;
+}
+.steps li strong { color: #F2EFE9; display: block; font-size: 15px; margin-bottom: 2px; }
+.checks { padding-left: 18px; color: #8A8680; font-size: 14px; margin: 0 0 12px; }
+.checks li { margin-bottom: 8px; }
+.checks li strong { color: #F2EFE9; }
+.honesty {
+  border: 1px solid #2E2E2E; border-radius: 16px;
+  padding: 28px; margin: 0 0 28px; background: #181818;
+}
+.honesty p { color: #8A8680; font-size: 14px; margin: 0 0 10px; }
+.honesty p:last-child { margin-bottom: 0; }
+.honesty strong { color: #F2EFE9; }
+section.block a { color: #C9A35F; text-decoration: none; }
+section.block a:hover { text-decoration: underline; }
+"""
+
+HERO_HTML = """
+<header class="hero">
+  <p class="brand"><svg width="46" height="28" viewBox="0 0 46 28" aria-hidden="true"><polyline points="2,14 11,14 15,6 20,22 24,14 42,14" fill="none" stroke="#C9A35F" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/></svg>SkillDoctor</p>
+  <h1>A live trust mark for AI skills. Wear the badge, get audited every day, and your score is always the true one.</h1>
+  <p class="sub">SkillDoctor audits the skills your AI runs, the files a host loads into every conversation. Projects that pass earn the plaque below, served live from this registry and re-checked daily.</p>
+  <p><img class="plaque" src="__BADGE_BASE_URL__audited-plaque.svg" onerror="this.onerror=null;this.src='badges/audited-plaque.svg'" alt="The SkillDoctor audited plaque: the mark of a checked skill" width="560"></p>
+</header>
 """
 
 GENERATOR_HTML = """
@@ -510,21 +589,75 @@ GENERATOR_HTML = """
     <button id="repo-go" type="button">Build my snippet</button>
   </div>
   <p class="note" id="repo-error" hidden>That does not look like a GitHub owner and repo yet.</p>
+  <div class="preview">
+    <p class="preview-label">This is what your badge and plaque look like. Type your repo above and the preview switches to your personal addresses.</p>
+    <img class="badge" id="preview-badge" src="__BADGE_BASE_URL__audited.svg" onerror="this.onerror=null;this.src='badges/audited.svg'" alt="Your SkillDoctor badge, as it will appear" height="28">
+    <img class="plaque" id="preview-plaque" src="__BADGE_BASE_URL__audited-plaque.svg" onerror="this.onerror=null;this.src='badges/audited-plaque.svg'" alt="Your SkillDoctor plaque, as it will appear" width="560">
+    <p class="note">Your address answers with this pending design from the moment you paste it, never a broken image. At the next daily verification run the same address switches to your true score.</p>
+  </div>
   <div id="repo-out" hidden>
     <label for="badge-snippet">The badge, for badge rows (Markdown)</label>
     <pre id="badge-snippet"></pre>
     <label for="plaque-snippet">The plaque, for a place of honor (HTML)</label>
     <pre id="plaque-snippet"></pre>
-    <p class="note">Your badge activates at the next daily verification
-    run. GitHub code search indexing can delay discovery of a brand new
+    <p class="note">Your badge is live at this address right away,
+    showing the pending design. At the next daily verification run your
+    repo is audited and the same address switches to your true score.
+    GitHub code search indexing can delay discovery of a brand new
     badge by some hours.</p>
   </div>
+</section>
+"""
+
+HOW_HTML = """
+<section class="block">
+  <h2>How it works</h2>
+  <ol class="steps">
+    <li><strong>Get your personal link</strong>
+    Type your repo in the generator above and copy the snippet. The badge address carries your own GitHub owner and repo, and that address is the whole enrollment: no account, no submission form.</li>
+    <li><strong>Paste it into your README</strong>
+    The small badge fits a badge row; the plaque takes a place of honor. Both are live images served from your badge address, not files in your repo, so what readers see is always the latest result.</li>
+    <li><strong>Get audited every day</strong>
+    A scheduled run searches GitHub for the badge address, audits the skills of every repo it finds, and regenerates each badge at its true score. Slip below the standard and the badge flips to a grey recheck state until the skills pass again.</li>
+  </ol>
+</section>
+"""
+
+CHECKS_HTML = """
+<section class="block">
+  <h2>What the audit checks</h2>
+  <p>Every listed project is re-audited with the current SkillDoctor release. The audit reads every skill in the project, and every file bundled with it, and checks:</p>
+  <ul class="checks">
+    <li><strong>Validity and spec limits.</strong> Frontmatter and required fields, names that match their folders, names within 64 characters and descriptions within 1,024.</li>
+    <li><strong>Security.</strong> Instruction override and data exfiltration language, credential store access, destructive shell commands, long opaque blobs, and hidden Unicode: bidi controls, zero width characters and tag characters that can hide instructions from a human reader.</li>
+    <li><strong>Bundled files.</strong> The scripts and references inside a skill folder are scanned with the same patterns. Anything the tool cannot scan is reported as not audited, never silently passed.</li>
+    <li><strong>Token cost, split honestly.</strong> The always-on cost of names and descriptions, which a host loads into every conversation, reported separately from the per-use cost of skill bodies.</li>
+    <li><strong>Conflicts.</strong> Duplicate skill names and near duplicate descriptions that could make a host load the wrong skill.</li>
+  </ul>
+  <p>The evidence behind the checks is <a href="https://github.com/Dongdarealest/skilldoctor/blob/main/AUDIT.md">the audit of 777 public skills</a>, and the listing rules live in <a href="https://github.com/Dongdarealest/skilldoctor/blob/main/REGISTRY.md">REGISTRY.md</a>.</p>
+</section>
+"""
+
+EXAMPLES_INTRO = """
+<section class="block">
+  <h2>Verified entries</h2>
+  <p>These projects wear the live plaque today, rendered exactly as it appears on their READMEs.</p>
+</section>
+"""
+
+HONESTY_HTML = """
+<section class="honesty">
+  <h2>The honest part</h2>
+  <p><strong>The picture alone proves nothing.</strong> Anyone can copy an image into a README, so the proof is the entry on this page, generated by the registry itself from its own audit. A badge that is not listed here is just a picture.</p>
+  <p>Entries are re-verified daily, so a score on this page is the latest result, not a lifetime grade. A project that stops passing shows the recheck design until it passes again. And until a repo is first audited, its address shows a pending design: never a broken image, and never a score it has not earned.</p>
+  <p>Taking the badge address out of a README removes the listing at the next run, and discovery of a brand new badge can take some hours, because GitHub code search indexing lags behind.</p>
 </section>
 """
 
 GENERATOR_JS = """
 (function () {
   var SITE = "https://dongdarealest.github.io/skilldoctor";
+  var BADGES = "__BADGE_BASE_URL__";
   function parseRepo(raw) {
     var s = raw.trim();
     s = s.replace(/^https?:\\/\\/github\\.com\\//, "").replace(/\\/$/, "").replace(/\\.git$/, "");
@@ -534,19 +667,43 @@ GENERATOR_JS = """
     if (!ok.test(parts[0]) || !ok.test(parts[1])) { return null; }
     return parts;
   }
+  function setPreview(img, personal, generic) {
+    img.onerror = function () {
+      img.onerror = null;
+      img.src = generic;
+    };
+    img.src = personal;
+  }
+  function updatePreviews(parts) {
+    var badge = document.getElementById("preview-badge");
+    var plaque = document.getElementById("preview-plaque");
+    if (!parts) {
+      badge.src = BADGES + "audited.svg";
+      plaque.src = BADGES + "audited-plaque.svg";
+      return;
+    }
+    var base = BADGES + parts[0] + "--" + parts[1];
+    setPreview(badge, base + ".svg", "badges/audited.svg");
+    setPreview(plaque, base + "-plaque.svg", "badges/audited-plaque.svg");
+  }
+  var input = document.getElementById("repo-input");
+  input.addEventListener("input", function () {
+    updatePreviews(parseRepo(input.value));
+  });
   var button = document.getElementById("repo-go");
   button.addEventListener("click", function () {
-    var parts = parseRepo(document.getElementById("repo-input").value);
+    var parts = parseRepo(input.value);
     var out = document.getElementById("repo-out");
     var err = document.getElementById("repo-error");
     if (!parts) { out.hidden = true; err.hidden = false; return; }
     err.hidden = true;
-    var base = SITE + "/badges/" + parts[0] + "--" + parts[1];
+    var base = BADGES + parts[0] + "--" + parts[1];
     document.getElementById("badge-snippet").textContent =
       "[![Audited by SkillDoctor](" + base + ".svg)](" + SITE + "/)";
     document.getElementById("plaque-snippet").textContent =
       '<a href="' + SITE + '/"><img src="' + base +
       '-plaque.svg" alt="SkillDoctor audited plaque" width="560"></a>';
+    updatePreviews(parts);
     out.hidden = false;
   });
 })();
@@ -558,8 +715,8 @@ def render_project(entry):
     repo = html.escape(entry["repo"])
     homepage = html.escape(entry["homepage"])
     plaque = html.escape(entry["plaque"])
-    badge_url = "%s/%s" % (SITE_URL, entry["badge"])
-    plaque_url = "%s/%s" % (SITE_URL, entry["plaque"])
+    badge_url = "%s%s.svg" % (BADGE_BASE_URL, entry["slug"])
+    plaque_url = "%s%s-plaque.svg" % (BADGE_BASE_URL, entry["slug"])
     if entry["status"] == "current":
         pill = '<span class="pill">Current</span>'
         stats = "Health %d of 100 · %d skills · Verified %s" % (
@@ -581,6 +738,7 @@ def render_project(entry):
     return (
         '<section class="project">\n'
         '<a href="%s"><img class="plaque" src="%s" '
+        'onerror="this.onerror=null;this.src=\'%s\'" '
         'alt="%s audited plaque" width="560"></a>\n'
         "<h2><a href=\"%s\">%s</a></h2>\n"
         '<p class="stats">%s</p>\n'
@@ -592,6 +750,7 @@ def render_project(entry):
         "</section>"
         % (
             repo,
+            plaque_url,
             plaque,
             name,
             repo,
@@ -608,33 +767,44 @@ def render_project(entry):
 
 def render_index(entries, when):
     projects = "\n".join(render_project(entry) for entry in entries)
-    return (
-        "<!DOCTYPE html>\n"
-        '<html lang="en">\n<head>\n<meta charset="utf-8">\n'
-        '<meta name="viewport" content="width=device-width, initial-scale=1">\n'
-        "<title>The SkillDoctor registry</title>\n"
-        "<style>%s</style>\n</head>\n<body>\n"
-        '<div class="wrap">\n<header>\n'
-        '<p class="eyebrow">SkillDoctor</p>\n'
-        "<h1>The registry</h1>\n"
-        '<p class="lede">Projects listed here passed a SkillDoctor audit, '
-        "and this page is the proof: anyone can paste a badge, so the "
-        "badges here are live. Most projects got here by wearing the "
-        "badge; a scheduled job searches GitHub each day for the badge "
-        "address, audits what it finds, and regenerates these images "
-        "from the latest result. A project that stops passing flips to "
-        "a grey recheck plaque until it passes again, and one that "
-        "takes the badge down is dropped.</p>\n"
-        "</header>\n<main>\n%s\n%s\n</main>\n"
-        "<footer>\n<p>Run by <a href=\"https://github.com/Dongdarealest/"
-        'skilldoctor">SkillDoctor</a>. How listing and verification work: '
-        '<a href="https://github.com/Dongdarealest/skilldoctor/blob/main/'
-        'REGISTRY.md">REGISTRY.md</a>. The machine readable state is '
-        '<a href="registry.json">registry.json</a>. '
-        "Last rebuilt %s.</p>\n</footer>\n</div>\n"
-        "<script>%s</script>\n</body>\n</html>\n"
-        % (PAGE_CSS, GENERATOR_HTML, projects, when.strftime("%Y-%m-%d"), GENERATOR_JS)
-    )
+    parts = [
+        "<!DOCTYPE html>",
+        '<html lang="en">',
+        "<head>",
+        '<meta charset="utf-8">',
+        '<meta name="viewport" content="width=device-width, initial-scale=1">',
+        "<title>SkillDoctor registry: live badges for audited AI skills</title>",
+        "<style>",
+        PAGE_CSS,
+        "</style>",
+        "</head>",
+        "<body>",
+        '<div class="wrap">',
+        HERO_HTML,
+        "<main>",
+        GENERATOR_HTML,
+        HOW_HTML,
+        CHECKS_HTML,
+        EXAMPLES_INTRO + projects,
+        HONESTY_HTML,
+        "</main>",
+        "<footer>",
+        '<p>Run by <a href="https://github.com/Dongdarealest/skilldoctor">SkillDoctor</a>. '
+        "How listing and verification work: "
+        '<a href="https://github.com/Dongdarealest/skilldoctor/blob/main/REGISTRY.md">REGISTRY.md</a>. '
+        'The machine readable state is <a href="registry.json">registry.json</a>. '
+        "Last rebuilt " + when.strftime("%Y-%m-%d") + ".</p>",
+        "</footer>",
+        "</div>",
+        "<script>",
+        GENERATOR_JS,
+        "</script>",
+        "</body>",
+        "</html>",
+        "",
+    ]
+    page = "\n".join(parts)
+    return page.replace("__BADGE_BASE_URL__", BADGE_BASE_URL)
 
 
 # ---------------------------------------------------------------------------
@@ -657,7 +827,7 @@ def save_projects(projects, path=PROJECTS_FILE):
 def write_site(entries, when, docs_dir=DOCS_DIR):
     badges_dir = os.path.join(docs_dir, "badges")
     os.makedirs(badges_dir, exist_ok=True)
-    expected = {GENERIC_BADGE}
+    expected = {GENERIC_BADGE, GENERIC_PLAQUE}
     for entry in entries:
         expected.add(os.path.basename(entry["badge"]))
         expected.add(os.path.basename(entry["plaque"]))
@@ -667,6 +837,9 @@ def write_site(entries, when, docs_dir=DOCS_DIR):
     generic_path = os.path.join(badges_dir, GENERIC_BADGE)
     with open(generic_path, "w", encoding="utf-8") as fh:
         fh.write(sd.badge_svg() + "\n")
+    generic_plaque_path = os.path.join(badges_dir, GENERIC_PLAQUE)
+    with open(generic_plaque_path, "w", encoding="utf-8") as fh:
+        fh.write(generic_plaque_svg() + "\n")
     for entry in entries:
         badge_path = os.path.join(docs_dir, entry["badge"])
         with open(badge_path, "w", encoding="utf-8") as fh:
