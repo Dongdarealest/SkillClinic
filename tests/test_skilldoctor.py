@@ -1,0 +1,158 @@
+"""Unit tests for SkillDoctor. Standard library only.
+
+Run from the project root:
+    python3 -m unittest discover -s tests -v
+"""
+
+import os
+import sys
+import tempfile
+import unittest
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+import skilldoctor as sd
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+EXAMPLES = os.path.join(os.path.dirname(HERE), "examples")
+
+
+def write_skill(root, folder_name, text):
+    folder = os.path.join(root, folder_name)
+    os.makedirs(folder)
+    with open(os.path.join(folder, "SKILL.md"), "w", encoding="utf-8") as fh:
+        fh.write(text)
+    return folder
+
+
+class FrontmatterTests(unittest.TestCase):
+    def test_parses_simple_fields(self):
+        fields, body, error = sd.parse_frontmatter(
+            "---\nname: demo\ndescription: A demo skill.\n---\n\nBody text.\n"
+        )
+        self.assertIsNone(error)
+        self.assertEqual(fields["name"], "demo")
+        self.assertEqual(fields["description"], "A demo skill.")
+        self.assertIn("Body text.", body)
+
+    def test_quoted_values_are_unwrapped(self):
+        fields, _, error = sd.parse_frontmatter(
+            '---\nname: demo\ndescription: "Quoted: with colon"\n---\nBody.\n'
+        )
+        self.assertIsNone(error)
+        self.assertEqual(fields["description"], "Quoted: with colon")
+
+    def test_missing_block_is_an_error(self):
+        _, _, error = sd.parse_frontmatter("# Just a heading\n")
+        self.assertIsNotNone(error)
+
+    def test_unclosed_block_is_an_error(self):
+        _, _, error = sd.parse_frontmatter("---\nname: demo\n")
+        self.assertIsNotNone(error)
+
+    def test_line_without_colon_is_an_error(self):
+        _, _, error = sd.parse_frontmatter("---\nname demo\n---\nBody.\n")
+        self.assertIsNotNone(error)
+
+
+class TokenTests(unittest.TestCase):
+    def test_estimate_is_chars_over_four(self):
+        self.assertEqual(sd.estimate_tokens("a" * 40), 10)
+        self.assertEqual(sd.estimate_tokens("a" * 41), 11)
+        self.assertEqual(sd.estimate_tokens(""), 0)
+
+
+class AuditTests(unittest.TestCase):
+    def test_clean_example_is_ok(self):
+        report = sd.audit_skill(os.path.join(EXAMPLES, "clean-skill"), "examples")
+        self.assertEqual(report.verdict, "OK")
+        self.assertEqual(report.name, "clean-skill")
+        self.assertGreater(report.tokens, 0)
+
+    def test_invalid_example_fails(self):
+        report = sd.audit_skill(os.path.join(EXAMPLES, "invalid-skill"), "examples")
+        self.assertEqual(report.verdict, "FAIL")
+        messages = " ".join(f.message for f in report.findings)
+        self.assertIn("missing required field: description", messages)
+        self.assertIn("not kebab-case", messages)
+        self.assertIn("does not match its folder", messages)
+
+    def test_risky_example_fails_with_security_findings(self):
+        report = sd.audit_skill(os.path.join(EXAMPLES, "risky-skill"), "examples")
+        self.assertEqual(report.verdict, "FAIL")
+        security = [f for f in report.findings if f.kind == "security"]
+        self.assertTrue(any(f.severity == "high" for f in security))
+        labels = " ".join(f.message for f in security)
+        self.assertIn("pipes a network download", labels)
+        self.assertIn("ignore its previous instructions", labels)
+        self.assertIn("credential", labels)
+        self.assertIn("base64", labels)
+
+    def test_valid_skill_in_temp_folder(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            folder = write_skill(
+                tmp, "note-taker",
+                "---\nname: note-taker\ndescription: Takes tidy notes.\n---\n\nBe tidy.\n",
+            )
+            report = sd.audit_skill(folder, "test")
+            self.assertEqual(report.verdict, "OK")
+
+    def test_missing_file_reports_error(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            report = sd.audit_skill(os.path.join(tmp, "ghost"), "test")
+            self.assertEqual(report.verdict, "FAIL")
+
+
+class ConflictTests(unittest.TestCase):
+    def test_duplicate_names_are_flagged(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            body = "---\nname: shared\ndescription: Does a shared thing.\n---\n\nBody.\n"
+            write_skill(os.path.join(tmp, "host-a"), "shared", body)
+            write_skill(os.path.join(tmp, "host-b"), "shared", body)
+            reports = sd.scan([os.path.join(tmp, "host-a"), os.path.join(tmp, "host-b")])
+            self.assertEqual(len(reports), 2)
+            for r in reports:
+                self.assertEqual(r.verdict, "WARN")
+                self.assertTrue(any(f.kind == "conflict" for f in r.findings))
+
+    def test_near_duplicate_descriptions_are_flagged(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            desc = "Formats meeting notes into a summary with decisions and action items listed"
+            write_skill(tmp, "alpha", "---\nname: alpha\ndescription: %s.\n---\n\nA.\n" % desc)
+            write_skill(tmp, "beta", "---\nname: beta\ndescription: %s.\n---\n\nB.\n" % desc)
+            reports = sd.scan([tmp])
+            for r in reports:
+                self.assertTrue(any("near duplicate" in f.message for f in r.findings))
+
+    def test_distinct_skills_have_no_conflicts(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            write_skill(tmp, "alpha", "---\nname: alpha\ndescription: Sorts photos by date taken.\n---\n\nA.\n")
+            write_skill(tmp, "beta", "---\nname: beta\ndescription: Drafts polite emails to clients.\n---\n\nB.\n")
+            reports = sd.scan([tmp])
+            for r in reports:
+                self.assertEqual(r.verdict, "OK")
+
+
+class ScanAndCliTests(unittest.TestCase):
+    def test_scan_finds_all_examples(self):
+        reports = sd.scan([EXAMPLES])
+        names = sorted(r.name for r in reports if r.name)
+        self.assertEqual(names, ["Invalid_Skill Name", "clean-skill", "risky-skill"])
+        verdicts = {r.name: r.verdict for r in reports if r.name}
+        self.assertEqual(verdicts["clean-skill"], "OK")
+        self.assertEqual(verdicts["risky-skill"], "FAIL")
+
+    def test_demo_exit_code_is_one_because_examples_include_failures(self):
+        self.assertEqual(sd.main(["--demo"]), 1)
+
+    def test_clean_scan_exit_code_is_zero(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            write_skill(tmp, "tidy", "---\nname: tidy\ndescription: Keeps things tidy.\n---\n\nTidy.\n")
+            self.assertEqual(sd.main([tmp]), 0)
+
+    def test_json_mode_runs(self):
+        self.assertEqual(sd.main(["--demo", "--json"]), 1)
+
+
+if __name__ == "__main__":
+    unittest.main()
