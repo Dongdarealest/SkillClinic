@@ -37,9 +37,11 @@ FAIL  risky-skill
       folder: examples/risky-skill
       score: 0 (F)
       - [high] security: skill pipes a network download straight into a shell
-        fix: Never pipe a download into a shell. Download the file, read it, then decide whether to run it.
+        fix: Never pipe a download into a shell. Download the file, read it,
+        then decide whether to run it.
       - [high] security: skill instructs reading or sending credential material
-        fix: Remove the credential access. A skill should ask the user, never read secret stores.
+        fix: Remove the credential access. A skill should ask the user,
+        never read secret stores.
 
 OK    clean-skill
       score: 100 (A)
