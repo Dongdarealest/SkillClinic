@@ -1,3 +1,7 @@
+## v0.2.2
+
+SkillDoctor now installs like a product instead of a download. One line puts a skilldoctor command on the machine, on Windows too, and the README leads with it. A pyproject.toml is in place so a PyPI release can follow without repackaging.
+
 ## v0.2.1
 
 Two things a visitor asked for without words. The audit badge in the README is now shown rendered, the way it looks on a real repo, above the snippet you paste. And the repo now doubles as a GitHub Action, so a skill collection can audit itself on every push and fail the build when a skill fails.
