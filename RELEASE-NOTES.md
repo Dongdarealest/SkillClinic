@@ -1,6 +1,6 @@
 ## v0.3.4
 
-SkillDoctor is on PyPI: pip install skilldoctor. Publishing now runs through PyPI trusted publishing from this repo's release workflow, with no stored token anywhere.
+SkillDoctor is on PyPI as skillcheckup: pip install skillcheckup, then run the skilldoctor command. Publishing now runs through PyPI trusted publishing from this repo's release workflow, with no stored token anywhere.
 
 ## v0.3.3
 

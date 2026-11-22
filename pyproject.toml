@@ -3,7 +3,7 @@ requires = ["setuptools>=61"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "skilldoctor"
+name = "skillcheckup"
 version = "0.3.4"
 description = "Audit the AI skill files installed on your machine for validity, security risks, conflicts, and token cost."
 readme = "README.md"
