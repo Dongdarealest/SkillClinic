@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/masthead.png" alt="SkillDoctor: a checkup for the skills your AI runs" width="880">
+  <img src="https://raw.githubusercontent.com/Dongdarealest/skilldoctor/main/assets/masthead.png" alt="SkillDoctor: a checkup for the skills your AI runs" width="880">
 </p>
 
 <p align="center">
@@ -12,7 +12,7 @@
 Skills are instructions your AI loads and follows, often at the start of every conversation. Most people install them from repositories, gists, and chat messages without ever reading them. SkillDoctor reads them for you: one command audits every skill on your machine and gives each one a verdict.
 
 <p align="center">
-  <img src="assets/demo.png" alt="SkillDoctor demo output: one clean skill passes, an invalid skill and a risky skill fail with reasons" width="880">
+  <img src="https://raw.githubusercontent.com/Dongdarealest/skilldoctor/main/assets/demo.png" alt="SkillDoctor demo output: one clean skill passes, an invalid skill and a risky skill fail with reasons" width="880">
 </p>
 
 <p align="center"><em>The bundled demo: one clean skill passes, two fail, every failure with its reason.</em></p>
@@ -110,7 +110,7 @@ Paste this into your README and it renders as the badge above:
 This repo doubles as a GitHub Action, so a collection can audit itself on every push:
 
 ```yaml
-- uses: Dongdarealest/skilldoctor@v0.3.4
+- uses: Dongdarealest/skilldoctor@v0.3.5
 ```
 
 It fails the build when any skill fails the audit. Anywhere else, the plain command does the same job in CI: `skilldoctor --json` for machines, exit code 1 on any FAIL.
