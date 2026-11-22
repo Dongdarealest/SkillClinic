@@ -10,6 +10,12 @@
   <img src="https://visitor-badge.laobi.icu/badge?page_id=Dongdarealest.skilldoctor" alt="Visitors">
 </p>
 
+<p align="center">
+  <a href="https://github.com/Dongdarealest/skilldoctor/blob/main/REGISTRY.md"><img src="https://raw.githubusercontent.com/Dongdarealest/skilldoctor/main/assets/audited-plaque.svg" alt="The SkillDoctor audited plaque: the mark of a checked skill" width="560"></a>
+</p>
+
+Projects that pass the audit earn this plaque and the badge further down. The picture alone proves nothing, and anyone can paste one: the proof is the entry in the [registry](REGISTRY.md), added only after the maintainers re-run the audit and the results match.
+
 Skills are instructions your AI loads and follows, often at the start of every conversation. Most people install them from repositories, gists, and chat messages without ever reading them. SkillDoctor reads them for you: one command audits every skill on your machine and gives each one a verdict.
 
 <p align="center">
@@ -31,16 +37,16 @@ pip install skillcheckup
 One line installs a `skilldoctor` command on your machine:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Dongdarealest/skilldoctor/v0.3.8/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Dongdarealest/skilldoctor/v0.3.9/install.sh | bash
 ```
 
 On Windows, in PowerShell:
 
 ```powershell
-irm https://raw.githubusercontent.com/Dongdarealest/skilldoctor/v0.3.8/install.ps1 | iex
+irm https://raw.githubusercontent.com/Dongdarealest/skilldoctor/v0.3.9/install.ps1 | iex
 ```
 
-Both installers are pinned to the v0.3.8 release tag and verify the published SHA-256 of `skilldoctor.py` before installing, refusing on any mismatch. The tool audits installers it would not trust, so its own had to pass.
+Both installers are pinned to the v0.3.9 release: they download `skilldoctor.py` and its published SHA-256 as assets of that release and check the two match before installing, refusing on any mismatch. The tool audits installers it would not trust, so its own had to pass.
 
 Then it is just:
 
@@ -66,7 +72,7 @@ No installer fan? The whole tool is one file: download `skilldoctor.py` from thi
 | --- | --- |
 | Validity | Frontmatter that does not parse, missing name or description, names that are not kebab-case or do not match their folder, names and descriptions over the spec length limits |
 | Security | Downloads piped into a shell, instructions touching credential stores, language that sends user data out, prompt override phrases, uninspectable base64 blobs, destructive commands, invisible Unicode characters, and the same patterns in the text files bundled with a skill |
-| Conflicts | The same skill name installed in several host folders, near-duplicate descriptions that make hosts load the wrong skill. Skills namespaced inside a plugin are not conflicts |
+| Conflicts | The same skill name installed in several host folders, near-duplicate descriptions that make hosts load the wrong skill. Skills namespaced inside a plugin, and the distribution copies inside one collection, are not conflicts |
 | Token cost | Always-on tokens (the name and description a host loads into every conversation) counted apart from body tokens, which load only when a skill runs |
 
 ## Reading the report
@@ -98,22 +104,30 @@ Nothing is deleted outright. Failed skills move to `~/.skilldoctor/quarantine` i
 
 ## Show your audit
 
-Publish skills of your own? If your collection passes a SkillDoctor audit, say so where people can see it. This is the badge on a repo, linked back here:
+Publish skills of your own? When your collection passes a SkillDoctor audit, it has earned the badge. One command writes it, with a large plaque for a place of honor and the machine report, into the audited folder:
 
-[![Audited by SkillDoctor](https://img.shields.io/badge/skills-audited%20by%20SkillDoctor-141414?style=flat-square)](https://github.com/Dongdarealest/skilldoctor)
+```bash
+skilldoctor ~/path/to/skills --write-badge
+```
+
+A failing audit writes nothing: fix the failures first, then take the badge. This is the badge on a repo, linked to the registry where listings are verified:
+
+[![Audited by SkillDoctor](https://raw.githubusercontent.com/Dongdarealest/skilldoctor/main/assets/audited-badge.svg)](https://github.com/Dongdarealest/skilldoctor/blob/main/REGISTRY.md)
 
 Paste this into your README and it renders as the badge above:
 
 ```markdown
-[![Audited by SkillDoctor](https://img.shields.io/badge/skills-audited%20by%20SkillDoctor-141414?style=flat-square)](https://github.com/Dongdarealest/skilldoctor)
+[![Audited by SkillDoctor](https://raw.githubusercontent.com/Dongdarealest/skilldoctor/main/assets/audited-badge.svg)](https://github.com/Dongdarealest/skilldoctor/blob/main/REGISTRY.md)
 ```
+
+The image alone proves nothing, and anyone can paste one. The proof is the registry entry: a listing is added only after the maintainers re-run the audit on the public repo and the results match the submitted report, file hashes included. See [REGISTRY.md](REGISTRY.md) for how verification works and how to ask for a listing.
 
 ## In CI, and as a GitHub Action
 
 This repo doubles as a GitHub Action, so a collection can audit itself on every push:
 
 ```yaml
-- uses: Dongdarealest/skilldoctor@v0.3.8
+- uses: Dongdarealest/skilldoctor@v0.3.9
 ```
 
 It fails the build when any skill fails the audit. Anywhere else, the plain command does the same job in CI: `skilldoctor --json` for machines, exit code 1 on any FAIL.

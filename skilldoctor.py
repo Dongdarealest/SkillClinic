@@ -15,7 +15,9 @@ for four things in one pass:
      override phrases, and invisible Unicode characters.
   3. Conflicts: the same skill name installed in more than one place, and
      near-duplicate descriptions that make hosts pick the wrong skill.
-     Skills namespaced inside a plugin are not conflicts.
+     Skills namespaced inside a plugin are not conflicts, and neither
+     are the distribution copies inside one collection: a skills/ source
+     and its ready to install for-<target> copies are one skill.
   4. Token cost: an estimate split in two, the always-on cost of the
      name and description that hosts load into every conversation, and
      the body tokens that load only when the skill is used.
@@ -29,6 +31,9 @@ Usage:
     python3 skilldoctor.py ~/my/skills     scan a specific folder
     python3 skilldoctor.py --demo          audit the bundled examples
     python3 skilldoctor.py --json          machine readable report
+    python3 skilldoctor.py --write-badge ~/my/skills
+                      on a passing audit, write the earned badge, the
+                      plaque and the machine report into the folder
 
 Exit code is 1 when any skill verdict is FAIL, otherwise 0.
 """
@@ -43,7 +48,7 @@ import shutil
 import sys
 from datetime import datetime
 
-VERSION = "0.3.8"
+VERSION = "0.3.9"
 
 DEFAULT_LOCATIONS = [
     "~/.claude/skills",
@@ -68,6 +73,11 @@ AUDIT_EXTENSIONS = {
     ".json", ".yaml", ".yml", ".toml",
 }
 AUDIT_FILE_CAP = 256 * 1024
+
+# Folders with these names hold scaffolds for new skills, not installed
+# skills: a template ships a placeholder name that matches nothing yet,
+# so auditing one would only report noise. Discovery skips them.
+SCAFFOLD_DIRS = {"template", "templates"}
 
 # ---------------------------------------------------------------------------
 # Security patterns. Each entry: (compiled regex, severity, label).
@@ -311,6 +321,7 @@ class SkillReport:
             "folder": self.folder,
             "host": self.host,
             "path": self.path,
+            "content_hash": self.content_hash,
             "tokens": self.tokens,
             "always_on_tokens": self.always_on_tokens,
             "body_tokens": self.body_tokens,
@@ -476,7 +487,10 @@ def find_skill_folders(root):
         if depth > 6:
             dirnames[:] = []
             continue
-        dirnames[:] = sorted(d for d in dirnames if d != ".git" and not d.startswith("."))
+        dirnames[:] = sorted(
+            d for d in dirnames
+            if d != ".git" and not d.startswith(".") and d not in SCAFFOLD_DIRS
+        )
         if "SKILL.md" in filenames:
             yield dirpath, host
 
@@ -516,14 +530,58 @@ def _version_siblings(a, b):
     return strip(_path_parts(a)) == strip(_path_parts(b))
 
 
+DISTRIBUTION_MARKERS = ("packs", "examples", "skills")
+
+
+def _distribution_layout(folder):
+    """(project root, role) for a pack style distribution tree, or
+    (None, None) when the folder is not part of one.
+
+    Skill collections ship one source copy of each skill under a
+    skills/ folder, plus ready to install copies under for-<target>
+    folders and sample copies under examples/. Those copies are one
+    skill distributed several ways, not several installations
+    competing for one name. The project root is the folder above the
+    first distribution marker in the path (a packs/, examples/ or
+    skills/ folder, or a for-<target> folder). The role is "copy"
+    when the path below that root passes through a for-<target> or
+    examples/ folder, and "source" when it passes through skills/.
+    """
+    parts = _path_parts(folder)
+    for i, part in enumerate(parts):
+        if part in DISTRIBUTION_MARKERS or (part.startswith("for-") and len(part) > 4):
+            root = os.sep.join(parts[:i]) or os.sep
+            below = parts[i:]
+            if any(
+                p == "examples" or (p.startswith("for-") and len(p) > 4)
+                for p in below
+            ):
+                return root, "copy"
+            if "skills" in below:
+                return root, "source"
+            return root, None
+    return None, None
+
+
 def _pair_clashes(a, b):
     """Whether two same-name skills actually compete for one name.
 
     A skill inside a plugin is namespaced by that plugin, so it can
     only clash with another skill in the same plugin. Two cached
     versions of one plugin, and two byte identical files inside a
-    plugin tree, are the same skill rather than a conflict.
+    plugin tree, are the same skill rather than a conflict. The same
+    holds inside one collection's distribution tree: a skills/ source
+    and its for-<target> or examples/ copies are one skill, while two
+    source copies, or copies in different trees, still compete.
     """
+    a_root, a_role = _distribution_layout(a.folder)
+    b_root, b_role = _distribution_layout(b.folder)
+    if (
+        a_root is not None
+        and a_root == b_root
+        and (a_role == "copy" or b_role == "copy")
+    ):
+        return False
     a_plugin = _plugin_name(a.folder)
     b_plugin = _plugin_name(b.folder)
     if (a_plugin is None) != (b_plugin is None):
@@ -597,6 +655,83 @@ def grade_for(score):
     if score >= 40:
         return "D"
     return "F"
+
+
+# ---------------------------------------------------------------------------
+# The badge and the plaque. A passing audit earns both: the badge is a
+# small mark for badge rows, the plaque is the large award format for a
+# place of honor. One design at two sizes, the project mark throughout:
+# a gold ECG pulse on ink. The artwork the tool writes is generated
+# here, so the earned files and the repo assets can never drift apart.
+# ---------------------------------------------------------------------------
+BADGE_FONT = "Verdana, Geneva, sans-serif"
+
+
+def badge_svg(score=None, month=None):
+    """The audited badge as SVG text.
+
+    With a score and a month ("NOV 2026") it is the personalized badge
+    a passing project earns, with a gold segment carrying the two.
+    Without them it is the plain mark other projects paste.
+    """
+    pulse = (
+        '<polyline points="10,14 19,14 23,6 28,22 32,14 43,14" fill="none" '
+        'stroke="#C9A35F" stroke-width="2" stroke-linejoin="round" '
+        'stroke-linecap="round"/>'
+    )
+    divider = '<line x1="52" y1="6" x2="52" y2="22" stroke="#3A3A3A" stroke-width="1"/>'
+    label = (
+        '<text x="62" y="11" font-family="%s" font-size="7.5" '
+        'letter-spacing="1.5" fill="#8A8680">AUDITED BY</text>'
+        '<text x="62" y="23" font-family="%s" font-size="10.5" '
+        'font-weight="600" fill="#F2EFE9">SKILLDOCTOR</text>'
+        % (BADGE_FONT, BADGE_FONT)
+    )
+    extra = ""
+    width = 176
+    if score is not None and month:
+        width = 256
+        extra = (
+            '<line x1="150" y1="6" x2="150" y2="22" stroke="#3A3A3A" stroke-width="1"/>'
+            '<text x="162" y="18" font-family="%s" font-size="10" '
+            'fill="#C9A35F">%d · %s</text>' % (BADGE_FONT, score, month)
+        )
+    return (
+        '<svg xmlns="http://www.w3.org/2000/svg" width="%d" height="28" '
+        'viewBox="0 0 %d 28">'
+        '<rect width="%d" height="28" rx="6" fill="#141414" stroke="#2E2E2E"/>'
+        "%s%s%s%s</svg>" % (width, width, width, pulse, divider, label, extra)
+    )
+
+
+def plaque_svg(main_line, sub_line, fit=False):
+    """The audited plaque as SVG text: the large award format.
+
+    A gold pulse on ink inside a double frame, with an eyebrow, one
+    strong line and one quiet line. The generic plaque fits its lines
+    with textLength because its wording is longer than the frame; the
+    personalized lines are short enough to set naturally.
+    """
+    fit_attr = ' textLength="356" lengthAdjust="spacingAndGlyphs"' if fit else ""
+    return (
+        '<svg xmlns="http://www.w3.org/2000/svg" width="560" height="148" '
+        'viewBox="0 0 560 148">'
+        '<rect width="560" height="148" rx="16" fill="#141414" stroke="#2E2E2E"/>'
+        '<rect x="6" y="6" width="548" height="136" rx="12" fill="none" '
+        'stroke="#C9A35F" stroke-opacity="0.45"/>'
+        '<polyline points="36,74 56,74 68,42 82,106 92,74 132,74" fill="none" '
+        'stroke="#C9A35F" stroke-width="5" stroke-linejoin="round" '
+        'stroke-linecap="round"/>'
+        '<line x1="156" y1="34" x2="156" y2="114" stroke="#3A3A3A" stroke-width="1"/>'
+        '<text x="180" y="52" font-family="%s" font-size="15" '
+        'letter-spacing="3" fill="#C9A35F">SKILLDOCTOR AUDITED</text>'
+        '<text x="180" y="92" font-family="%s" font-size="30" '
+        'font-weight="600" fill="#F2EFE9"%s>%s</text>'
+        '<text x="180" y="122" font-family="%s" font-size="15" '
+        'fill="#8A8680"%s>%s</text>'
+        "</svg>"
+        % (BADGE_FONT, BADGE_FONT, fit_attr, main_line, BADGE_FONT, fit_attr, sub_line)
+    )
 
 
 HINTS = [
@@ -723,7 +858,84 @@ def render_text(reports, roots):
             "frees ~%d always-on tokens from every conversation, and keeps them restorable."
             % (len(failed), freed)
         )
+    elif reports:
+        lines.append("")
+        lines.append(
+            "Badge earned: this audit passed with a health score of %d/100, "
+            "so this project has earned the SkillDoctor badge." % health
+        )
+        lines.append(
+            "Run again with --write-badge to write the badge, the plaque and "
+            "the machine report into the audited folder: the badge for badge "
+            "rows, the plaque for a place of honor."
+        )
+        lines.append(
+            "To be listed in the registry, open an issue in the skilldoctor "
+            "repo and attach skilldoctor-report.json, or link your public "
+            "repo. A listing is added only after the maintainers re-run the "
+            "audit and the results match."
+        )
     return "\n".join(lines)
+
+
+def build_payload(reports, roots):
+    """The machine readable report as one dict, shared by --json and
+    the report file --write-badge writes."""
+    health = (
+        round(sum(r.score for r in reports) / len(reports)) if reports else None
+    )
+    return {
+        "version": VERSION,
+        "audit_date": datetime.now().strftime("%Y-%m-%d"),
+        "scanned": roots,
+        "skills": [r.to_dict() for r in reports],
+        "total_tokens": sum(r.tokens for r in reports),
+        "total_always_on_tokens": sum(r.always_on_tokens for r in reports),
+        "total_body_tokens": sum(r.body_tokens for r in reports),
+        "health_score": health,
+        "health_grade": grade_for(health) if health is not None else None,
+        "summary": {
+            "total": len(reports),
+            "ok": sum(1 for r in reports if r.verdict == "OK"),
+            "warn": sum(1 for r in reports if r.verdict == "WARN"),
+            "fail": sum(1 for r in reports if r.verdict == "FAIL"),
+        },
+    }
+
+
+def write_badge_files(reports, roots):
+    """Write the earned badge, plaque and report into the audited root.
+
+    Only a passing audit (no FAIL verdicts) earns the badge. On a
+    failing audit nothing is written: the badge is earned by fixing
+    the failures first. Returns a line describing what happened.
+    """
+    if not reports or any(r.verdict == "FAIL" for r in reports):
+        return (
+            "Badge not written: this audit has failures. Fix them first; "
+            "the badge is earned by a passing audit."
+        )
+    health = round(sum(r.score for r in reports) / len(reports))
+    now = datetime.now()
+    root = os.path.abspath(os.path.expanduser(roots[0]))
+    badge_path = os.path.join(root, "skilldoctor-badge.svg")
+    with open(badge_path, "w", encoding="utf-8") as fh:
+        fh.write(badge_svg(score=health, month=now.strftime("%b %Y").upper()) + "\n")
+    plaque_path = os.path.join(root, "skilldoctor-plaque.svg")
+    sub_line = "%d skills · 0 failures · %s" % (
+        len(reports),
+        now.strftime("%B %Y"),
+    )
+    with open(plaque_path, "w", encoding="utf-8") as fh:
+        fh.write(plaque_svg("Health %d / 100" % health, sub_line) + "\n")
+    report_path = os.path.join(root, "skilldoctor-report.json")
+    with open(report_path, "w", encoding="utf-8") as fh:
+        json.dump(build_payload(reports, roots), fh, indent=2)
+    return (
+        "Badge written: %s (the small mark, for badge rows), %s (the large "
+        "plaque, for a place of honor) and %s (attach it when you ask for "
+        "a registry listing)." % (badge_path, plaque_path, report_path)
+    )
 
 
 DEMO_FIXTURES = {
@@ -853,6 +1065,8 @@ def main(argv=None):
     parser.add_argument("paths", nargs="*", help="skill folders to scan instead of the defaults")
     parser.add_argument("--demo", action="store_true", help="audit the bundled example skills")
     parser.add_argument("--json", action="store_true", help="print the report as JSON")
+    parser.add_argument("--write-badge", action="store_true",
+                        help="on a passing audit, write the earned badge, plaque and report into the audited folder")
     parser.add_argument("--quarantine-failed", action="store_true",
                         help="after the audit, move every FAIL skill into ~/.skilldoctor/quarantine")
     parser.add_argument("--yes", action="store_true",
@@ -875,25 +1089,12 @@ def main(argv=None):
 
     reports = scan(roots)
     if args.json:
-        payload = {
-            "version": VERSION,
-            "scanned": roots,
-            "skills": [r.to_dict() for r in reports],
-            "total_tokens": sum(r.tokens for r in reports),
-            "total_always_on_tokens": sum(r.always_on_tokens for r in reports),
-            "total_body_tokens": sum(r.body_tokens for r in reports),
-            "health_score": round(sum(r.score for r in reports) / len(reports)) if reports else None,
-            "health_grade": grade_for(round(sum(r.score for r in reports) / len(reports))) if reports else None,
-            "summary": {
-                "total": len(reports),
-                "ok": sum(1 for r in reports if r.verdict == "OK"),
-                "warn": sum(1 for r in reports if r.verdict == "WARN"),
-                "fail": sum(1 for r in reports if r.verdict == "FAIL"),
-            },
-        }
-        print(json.dumps(payload, indent=2))
+        print(json.dumps(build_payload(reports, roots), indent=2))
     else:
         print(render_text(reports, roots))
+    if args.write_badge:
+        note = write_badge_files(reports, roots)
+        print(note, file=sys.stderr if args.json else sys.stdout)
     if args.quarantine_failed and not args.json:
         quarantine_failed(reports, assume_yes=args.yes)
     return 1 if any(r.verdict == "FAIL" for r in reports) else 0

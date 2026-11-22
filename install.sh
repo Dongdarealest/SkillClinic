@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# SkillDoctor installer, pinned to a release tag and checksum verified.
-# It downloads skilldoctor.py and its published SHA-256 from the same
-# tag and refuses to install when the two do not match.
-# Usage: curl -fsSL https://raw.githubusercontent.com/Dongdarealest/skilldoctor/v0.3.8/install.sh | bash
+# SkillDoctor installer, pinned to a release and checksum verified.
+# It downloads skilldoctor.py and its published SHA-256 as assets of
+# the same release and refuses to install when the two do not match.
+# Usage: curl -fsSL https://raw.githubusercontent.com/Dongdarealest/skilldoctor/v0.3.9/install.sh | bash
 set -euo pipefail
-VERSION="0.3.8"
-BASE="https://raw.githubusercontent.com/Dongdarealest/skilldoctor/v${VERSION}"
+VERSION="0.3.9"
+BASE="https://github.com/Dongdarealest/skilldoctor/releases/download/v${VERSION}"
 DEST="${HOME}/.local/bin"
 mkdir -p "$DEST"
 TMP="$(mktemp -d)"

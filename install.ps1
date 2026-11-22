@@ -1,10 +1,10 @@
-# SkillDoctor installer for Windows, pinned to a release tag and checksum verified.
-# It downloads skilldoctor.py and its published SHA-256 from the same
-# tag and refuses to install when the two do not match.
-# Usage: irm https://raw.githubusercontent.com/Dongdarealest/skilldoctor/v0.3.8/install.ps1 | iex
+# SkillDoctor installer for Windows, pinned to a release and checksum verified.
+# It downloads skilldoctor.py and its published SHA-256 as assets of
+# the same release and refuses to install when the two do not match.
+# Usage: irm https://raw.githubusercontent.com/Dongdarealest/skilldoctor/v0.3.9/install.ps1 | iex
 $ErrorActionPreference = "Stop"
-$version = "0.3.8"
-$base = "https://raw.githubusercontent.com/Dongdarealest/skilldoctor/v$version"
+$version = "0.3.9"
+$base = "https://github.com/Dongdarealest/skilldoctor/releases/download/v$version"
 $dest = Join-Path $HOME ".local\bin"
 New-Item -ItemType Directory -Force -Path $dest | Out-Null
 $tmp = Join-Path ([System.IO.Path]::GetTempPath()) ([System.IO.Path]::GetRandomFileName())
