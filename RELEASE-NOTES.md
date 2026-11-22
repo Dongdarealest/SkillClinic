@@ -1,3 +1,7 @@
+## v0.2.0
+
+Finding a bad skill is now only half the job. A new --quarantine-failed step moves every FAIL skill out of its host folder into a dated quarantine batch with a manifest, and --restore puts the last batch back. Nothing is deleted outright, and WARN verdicts are never moved. The README also gains an audited-by badge for skill authors. Twenty tests pass, including quarantine and restore round trips.
+
 ## v0.1.2
 
 Two adoption fixes. The demo now travels with the file: download skilldoctor.py on its own and the ten second demo still works, with the example skills embedded as a fallback. And the Support section traded its bare links for proper sponsor buttons.

@@ -44,13 +44,38 @@ python3 skilldoctor.py ~/path/to/skills
 python3 skilldoctor.py --json
 ```
 
-SkillDoctor looks in `~/.claude/skills`, `~/.cursor/skills`, `~/.codex/skills`, and `~/.config/claude/skills` when they exist. It reads files and changes nothing.
+SkillDoctor looks in `~/.claude/skills`, `~/.cursor/skills`, `~/.codex/skills`, and `~/.config/claude/skills` when they exist. Auditing reads files and changes nothing.
 
 ## Reading the report
 
 - **OK**: the skill parses, identifies itself properly, and shows no risky patterns.
 - **WARN**: worth a human look, for example a reference to a credential store or a very long file.
 - **FAIL**: broken or dangerous. The report exits with code 1 when any skill fails, so it drops straight into CI.
+
+## Removing what fails
+
+Finding a bad skill is only half the job, so SkillDoctor can clear it out too. Removal is deliberately boring and reversible:
+
+```bash
+# Audit, then move every FAIL skill out of its host folder
+python3 skilldoctor.py --quarantine-failed
+
+# The same, with no confirmation prompt, for scripts
+python3 skilldoctor.py --quarantine-failed --yes
+
+# Changed your mind? Put the last batch back
+python3 skilldoctor.py --restore
+```
+
+Nothing is deleted outright. Failed skills move to `~/.skilldoctor/quarantine` in a dated batch with a manifest of where each one came from, and `--restore` puts the most recent batch back exactly where it was. Only FAIL verdicts are moved; a WARN is a judgment call, and judgment calls stay yours.
+
+## Show your audit
+
+Publish skills of your own? If your collection passes a SkillDoctor audit, say so where people can see it:
+
+```markdown
+[![Audited by SkillDoctor](https://img.shields.io/badge/skills-audited%20by%20SkillDoctor-141414?style=flat-square)](https://github.com/Dongdarealest/skilldoctor)
+```
 
 ## Why this exists
 
