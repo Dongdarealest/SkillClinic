@@ -14,7 +14,7 @@
   <a href="https://github.com/Dongdarealest/skilldoctor/blob/main/REGISTRY.md"><img src="https://raw.githubusercontent.com/Dongdarealest/skilldoctor/main/assets/audited-plaque.svg" alt="The SkillDoctor audited plaque: the mark of a checked skill" width="560"></a>
 </p>
 
-Projects that pass the audit earn this plaque and the badge further down. The picture alone proves nothing, and anyone can paste one: the proof is the entry in the [registry](REGISTRY.md), added only after the maintainers re-run the audit and the results match.
+Projects that pass the audit earn this plaque and the badge further down. The picture alone proves nothing, and anyone can paste one: the proof is the entry in the registry, kept live at [dongdarealest.github.io/skilldoctor](https://dongdarealest.github.io/skilldoctor/) and described in [REGISTRY.md](REGISTRY.md). Listings are added only after the maintainers re-run the audit and the results match, and a daily re-audit keeps every listed badge honest after that.
 
 Skills are instructions your AI loads and follows, often at the start of every conversation. Most people install them from repositories, gists, and chat messages without ever reading them. SkillDoctor reads them for you: one command audits every skill on your machine and gives each one a verdict.
 
@@ -104,30 +104,40 @@ Nothing is deleted outright. Failed skills move to `~/.skilldoctor/quarantine` i
 
 ## Show your audit
 
-Publish skills of your own? When your collection passes a SkillDoctor audit, it has earned the badge. One command writes it, with a large plaque for a place of honor and the machine report, into the audited folder:
+Publish skills of your own? When your collection passes a SkillDoctor audit, it has earned the badge, and the badge worth wearing is a live one.
+
+Listed projects paste one snippet, once:
+
+```markdown
+[![Audited by SkillDoctor](https://dongdarealest.github.io/skilldoctor/badges/<slug>.svg)](https://dongdarealest.github.io/skilldoctor/)
+```
+
+The image is served from the registry site, not from your repo, and a scheduled job re-audits every listed repo each day and regenerates it from the latest result. Keep passing and it shows your current score. Stop passing and it flips to a grey recheck plaque until the project passes again. The slug is issued when your registry entry is created. For a place of honor, the same address with `-plaque` before `.svg` gives the large format:
+
+```html
+<a href="https://dongdarealest.github.io/skilldoctor/"><img src="https://dongdarealest.github.io/skilldoctor/badges/<slug>-plaque.svg" alt="SkillDoctor audited plaque" width="560"></a>
+```
+
+This is a real one, SkillPort's small badge, served live:
+
+[![Audited by SkillDoctor](https://dongdarealest.github.io/skilldoctor/badges/skillport.svg)](https://dongdarealest.github.io/skilldoctor/)
+
+The static route still exists, for announcements and offline use. One command writes a dated snapshot of the badge and the plaque, with the score and month on their faces, plus the machine report, into the audited folder:
 
 ```bash
 skilldoctor ~/path/to/skills --write-badge
 ```
 
-A failing audit writes nothing: fix the failures first, then take the badge. This is the badge on a repo, linked to the registry where listings are verified:
+A failing audit writes nothing: fix the failures first, then take the badge. A snapshot goes stale the moment the skills change; the live badge cannot, because the daily re-audit speaks for the current state of the repo.
 
-[![Audited by SkillDoctor](https://raw.githubusercontent.com/Dongdarealest/skilldoctor/main/assets/audited-badge.svg)](https://github.com/Dongdarealest/skilldoctor/blob/main/REGISTRY.md)
-
-Paste this into your README and it renders as the badge above:
-
-```markdown
-[![Audited by SkillDoctor](https://raw.githubusercontent.com/Dongdarealest/skilldoctor/main/assets/audited-badge.svg)](https://github.com/Dongdarealest/skilldoctor/blob/main/REGISTRY.md)
-```
-
-The image alone proves nothing, and anyone can paste one. The proof is the registry entry: a listing is added only after the maintainers re-run the audit on the public repo and the results match the submitted report, file hashes included. See [REGISTRY.md](REGISTRY.md) for how verification works and how to ask for a listing.
+The image alone still proves nothing, and anyone can paste one. The proof is the registry entry: a listing is added only after the maintainers re-run the audit on the public repo and the results match the submitted report, file hashes included. See [REGISTRY.md](REGISTRY.md) for how verification works and how to ask for a listing, and the registry itself at [dongdarealest.github.io/skilldoctor](https://dongdarealest.github.io/skilldoctor/).
 
 ## In CI, and as a GitHub Action
 
 This repo doubles as a GitHub Action, so a collection can audit itself on every push:
 
 ```yaml
-- uses: Dongdarealest/skilldoctor@v0.3.9
+- uses: Dongdarealest/skilldoctor@v0.4.0
 ```
 
 It fails the build when any skill fails the audit. Anywhere else, the plain command does the same job in CI: `skilldoctor --json` for machines, exit code 1 on any FAIL.

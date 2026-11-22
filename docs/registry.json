@@ -1,0 +1,33 @@
+{
+  "generated": "2026-11-22",
+  "projects": [
+    {
+      "slug": "skillport",
+      "name": "SkillPort",
+      "repo": "https://github.com/Dongdarealest/skillport",
+      "homepage": "https://dongdarealest.github.io/skillport/",
+      "verified": "2026-11-22",
+      "badge": "badges/skillport.svg",
+      "plaque": "badges/skillport-plaque.svg",
+      "status": "current",
+      "score": 92,
+      "skills": 15,
+      "failures": 0,
+      "note": null
+    },
+    {
+      "slug": "musekit",
+      "name": "MuseKit",
+      "repo": "https://github.com/Dongdarealest/musekit",
+      "homepage": "https://github.com/Dongdarealest/musekit",
+      "verified": "2026-11-22",
+      "badge": "badges/musekit.svg",
+      "plaque": "badges/musekit-plaque.svg",
+      "status": "current",
+      "score": 100,
+      "skills": 6,
+      "failures": 0,
+      "note": null
+    }
+  ]
+}

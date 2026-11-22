@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The SkillDoctor registry</title>
+<style>
+:root { color-scheme: dark; }
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: #141414; color: #F2EFE9;
+  font-family: Verdana, Geneva, sans-serif; line-height: 1.55;
+}
+.wrap { max-width: 880px; margin: 0 auto; padding: 48px 20px 64px; }
+.eyebrow {
+  color: #C9A35F; letter-spacing: 3px; font-size: 13px;
+  text-transform: uppercase; margin: 0 0 8px;
+}
+h1 { font-size: 34px; margin: 0 0 12px; font-weight: 600; }
+.lede { color: #8A8680; font-size: 15px; margin: 0 0 40px; max-width: 640px; }
+.project {
+  border: 1px solid #2E2E2E; border-radius: 16px;
+  padding: 28px; margin: 0 0 28px; background: #181818;
+}
+.project img.plaque { max-width: 100%; height: auto; display: block; }
+.project h2 { font-size: 20px; margin: 20px 0 6px; font-weight: 600; }
+.project h2 a { color: #F2EFE9; text-decoration: none; }
+.project h2 a:hover { color: #C9A35F; }
+.stats { color: #8A8680; font-size: 14px; margin: 0 0 12px; }
+.links { font-size: 14px; margin: 0 0 16px; }
+.links a { color: #C9A35F; text-decoration: none; }
+.links a:hover { text-decoration: underline; }
+.pill {
+  display: inline-block; border: 1px solid #C9A35F; color: #C9A35F;
+  border-radius: 999px; padding: 1px 10px; font-size: 12px;
+  letter-spacing: 1.5px; text-transform: uppercase; margin-right: 10px;
+}
+.pill.recheck { border-color: #8A8680; color: #8A8680; }
+.note { color: #8A8680; font-size: 14px; margin: 0 0 12px; }
+details { font-size: 13px; color: #8A8680; }
+details summary { cursor: pointer; color: #C9A35F; }
+pre {
+  background: #101010; border: 1px solid #2E2E2E; border-radius: 8px;
+  padding: 12px; overflow-x: auto; color: #F2EFE9; font-size: 12px;
+}
+footer { color: #8A8680; font-size: 13px; margin-top: 48px; }
+footer a { color: #C9A35F; text-decoration: none; }
+footer a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+<p class="eyebrow">SkillDoctor</p>
+<h1>The registry</h1>
+<p class="lede">Projects listed here passed a SkillDoctor audit, and this page is the proof: anyone can paste a badge, so the badges here are live. A scheduled job re-audits every listed repo each day and regenerates the images from the latest result. A project that stops passing flips to a grey recheck plaque until it passes again.</p>
+</header>
+<main>
+<section class="project">
+<a href="https://github.com/Dongdarealest/skillport"><img class="plaque" src="badges/skillport-plaque.svg" alt="SkillPort audited plaque" width="560"></a>
+<h2><a href="https://github.com/Dongdarealest/skillport">SkillPort</a></h2>
+<p class="stats">Health 92 of 100 · 15 skills · Verified 2026-11-22</p>
+<p class="links"><span class="pill">Current</span><a href="https://dongdarealest.github.io/skillport/">Homepage</a> · <a href="https://github.com/Dongdarealest/skillport">Repository</a></p>
+<details><summary>The live snippet for this project</summary>
+<pre>[![Audited by SkillDoctor](https://dongdarealest.github.io/skilldoctor/badges/skillport.svg)](https://dongdarealest.github.io/skilldoctor/)
+
+&lt;a href=&quot;https://dongdarealest.github.io/skilldoctor/&quot;&gt;&lt;img src=&quot;https://dongdarealest.github.io/skilldoctor/badges/skillport-plaque.svg&quot; alt=&quot;SkillDoctor audited plaque&quot; width=&quot;560&quot;&gt;&lt;/a&gt;</pre></details>
+</section>
+<section class="project">
+<a href="https://github.com/Dongdarealest/musekit"><img class="plaque" src="badges/musekit-plaque.svg" alt="MuseKit audited plaque" width="560"></a>
+<h2><a href="https://github.com/Dongdarealest/musekit">MuseKit</a></h2>
+<p class="stats">Health 100 of 100 · 6 skills · Verified 2026-11-22</p>
+<p class="links"><span class="pill">Current</span><a href="https://github.com/Dongdarealest/musekit">Homepage</a> · <a href="https://github.com/Dongdarealest/musekit">Repository</a></p>
+<details><summary>The live snippet for this project</summary>
+<pre>[![Audited by SkillDoctor](https://dongdarealest.github.io/skilldoctor/badges/musekit.svg)](https://dongdarealest.github.io/skilldoctor/)
+
+&lt;a href=&quot;https://dongdarealest.github.io/skilldoctor/&quot;&gt;&lt;img src=&quot;https://dongdarealest.github.io/skilldoctor/badges/musekit-plaque.svg&quot; alt=&quot;SkillDoctor audited plaque&quot; width=&quot;560&quot;&gt;&lt;/a&gt;</pre></details>
+</section>
+</main>
+<footer>
+<p>Run by <a href="https://github.com/Dongdarealest/skilldoctor">SkillDoctor</a>. How listing and verification work: <a href="https://github.com/Dongdarealest/skilldoctor/blob/main/REGISTRY.md">REGISTRY.md</a>. The machine readable state is <a href="registry.json">registry.json</a>. Last rebuilt 2026-11-22.</p>
+</footer>
+</div>
+</body>
+</html>
