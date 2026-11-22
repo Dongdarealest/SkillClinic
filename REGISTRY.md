@@ -24,3 +24,7 @@ Open an issue in this repo and attach your `skilldoctor-report.json`, or link yo
 | --- | --- | --- |
 | [SkillPort](https://github.com/Dongdarealest/skillport) | 2026-11-22 | 15 skills across 5 packs, 0 failures. Pack health scores: 100, 100, 100, 100 and 92 |
 | [MuseKit](https://github.com/Dongdarealest/musekit) | 2026-11-22 | 6 skills, 0 failures. Health score 100 |
+
+## Freshness
+
+A registry entry is a point in time verification, not a lifetime grade. Each entry is bound to the exact audited files through the SHA-256 hashes in the submitted report. When a listed project changes its audited skills, its printed score describes the earlier state, and the entry counts as stale until the project is re-verified. Every entry shows its verification date so readers can judge freshness for themselves. Re-verification is free: submit a fresh report and the maintainers re-run the audit and update the entry.
