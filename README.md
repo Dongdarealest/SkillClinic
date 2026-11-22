@@ -17,6 +17,8 @@ Skills are instructions your AI loads and follows, often at the start of every c
 
 <p align="center"><em>The bundled demo: one clean skill passes, two fail, every failure with its reason.</em></p>
 
+**The State of Public Skills:** we audited 777 skills from the six biggest public collections. One in three failed. [Read the audit](AUDIT.md).
+
 ## Quick start
 
 One line installs a `skilldoctor` command on your machine:
