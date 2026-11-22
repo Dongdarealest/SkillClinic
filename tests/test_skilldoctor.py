@@ -156,3 +156,39 @@ class ScanAndCliTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class QuarantineTest(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.mkdtemp()
+        self.old_home = os.environ.get("HOME")
+        os.environ["HOME"] = self.tmp
+        self.root = os.path.join(self.tmp, "skills")
+        bad = os.path.join(self.root, "bad-skill")
+        os.makedirs(bad)
+        with open(os.path.join(bad, "SKILL.md"), "w") as fh:
+            fh.write("---\nname: Wrong_Name\n---\n\nNo description here.\n")
+        good = os.path.join(self.root, "good-skill")
+        os.makedirs(good)
+        with open(os.path.join(good, "SKILL.md"), "w") as fh:
+            fh.write("---\nname: good-skill\ndescription: A tidy little skill that formats notes.\n---\n\nBe helpful.\n")
+
+    def tearDown(self):
+        if self.old_home is not None:
+            os.environ["HOME"] = self.old_home
+
+    def test_quarantine_moves_only_failures_and_restore_undoes(self):
+        reports = sd.scan([self.root])
+        batch = sd.quarantine_failed(reports, assume_yes=True)
+        self.assertIsNotNone(batch)
+        self.assertFalse(os.path.exists(os.path.join(self.root, "bad-skill")))
+        self.assertTrue(os.path.exists(os.path.join(self.root, "good-skill")))
+        self.assertTrue(os.path.exists(os.path.join(batch, "manifest.json")))
+        sd.restore_last()
+        self.assertTrue(os.path.exists(os.path.join(self.root, "bad-skill")))
+
+    def test_quarantine_declined_moves_nothing(self):
+        reports = sd.scan([self.root])
+        result = sd.quarantine_failed(reports, assume_yes=False, input_fn=lambda prompt: "n")
+        self.assertIsNone(result)
+        self.assertTrue(os.path.exists(os.path.join(self.root, "bad-skill")))

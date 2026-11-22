@@ -15,8 +15,9 @@ for four things in one pass:
   4. Token cost: an estimate of how many tokens each skill adds to every
      conversation, and the total always-on cost of everything installed.
 
-Zero dependencies. Python 3.8 or newer. Read only: SkillDoctor never
-modifies the files it audits.
+Zero dependencies. Python 3.8 or newer. Auditing is read only. Removal
+is a separate step you ask for, and it quarantines instead of deleting,
+so anything removed can be restored.
 
 Usage:
     python3 skilldoctor.py                 scan the default skill folders
@@ -32,9 +33,11 @@ import json
 import math
 import os
 import re
+import shutil
 import sys
+from datetime import datetime
 
-VERSION = "0.1.2"
+VERSION = "0.2.0"
 
 DEFAULT_LOCATIONS = [
     "~/.claude/skills",
@@ -429,6 +432,66 @@ def demo_root():
     return root
 
 
+def quarantine_dir():
+    return os.path.join(os.path.expanduser("~"), ".skilldoctor", "quarantine")
+
+
+def quarantine_failed(reports, assume_yes=False, input_fn=input):
+    """Move every FAIL skill out of its host folder into a dated
+    quarantine batch with a manifest, so the move can be undone."""
+    failed = [r for r in reports if r.verdict == "FAIL"]
+    if not failed:
+        print("No FAIL skills to remove.")
+        return None
+    print("These skills failed the audit:")
+    for r in failed:
+        print("  - %s (%s)" % (r.name or "(unnamed skill)", display_path(r.folder)))
+    if not assume_yes:
+        answer = input_fn("Move them to quarantine? [y/N] ")
+        if answer.strip().lower() not in ("y", "yes"):
+            print("Nothing moved.")
+            return None
+    stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+    batch = os.path.join(quarantine_dir(), stamp)
+    os.makedirs(batch, exist_ok=True)
+    manifest = {"batch": stamp, "moved": []}
+    for i, r in enumerate(failed):
+        src = os.path.abspath(os.path.expanduser(r.folder))
+        dest = os.path.join(batch, "%02d-%s" % (i, os.path.basename(src.rstrip("/"))))
+        shutil.move(src, dest)
+        manifest["moved"].append({"from": src, "to": dest, "name": r.name})
+        print("  moved: %s" % display_path(src))
+    with open(os.path.join(batch, "manifest.json"), "w", encoding="utf-8") as fh:
+        json.dump(manifest, fh, indent=1)
+    print("Quarantined %d skill(s) in %s" % (len(failed), display_path(batch)))
+    print("Undo any time with: python3 skilldoctor.py --restore")
+    return batch
+
+
+def restore_last():
+    """Move the most recent quarantine batch back to where it came from."""
+    root = quarantine_dir()
+    batches = []
+    if os.path.isdir(root):
+        batches = sorted(d for d in os.listdir(root) if os.path.isdir(os.path.join(root, d)))
+    if not batches:
+        print("No quarantine batches found.")
+        return
+    batch = os.path.join(root, batches[-1])
+    with open(os.path.join(batch, "manifest.json"), encoding="utf-8") as fh:
+        manifest = json.load(fh)
+    for item in manifest["moved"]:
+        if os.path.exists(item["from"]):
+            print("  skipped, something is already there: %s" % display_path(item["from"]))
+            continue
+        parent = os.path.dirname(item["from"])
+        if parent:
+            os.makedirs(parent, exist_ok=True)
+        shutil.move(item["to"], item["from"])
+        print("  restored: %s" % display_path(item["from"]))
+    print("Restore done.")
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(
         prog="skilldoctor",
@@ -437,8 +500,18 @@ def main(argv=None):
     parser.add_argument("paths", nargs="*", help="skill folders to scan instead of the defaults")
     parser.add_argument("--demo", action="store_true", help="audit the bundled example skills")
     parser.add_argument("--json", action="store_true", help="print the report as JSON")
+    parser.add_argument("--quarantine-failed", action="store_true",
+                        help="after the audit, move every FAIL skill into ~/.skilldoctor/quarantine")
+    parser.add_argument("--yes", action="store_true",
+                        help="skip the confirmation prompt (for scripts)")
+    parser.add_argument("--restore", action="store_true",
+                        help="move the most recent quarantine batch back and exit")
     parser.add_argument("--version", action="version", version="SkillDoctor " + VERSION)
     args = parser.parse_args(argv)
+
+    if args.restore:
+        restore_last()
+        return 0
 
     if args.demo:
         roots = [demo_root()]
@@ -464,6 +537,8 @@ def main(argv=None):
         print(json.dumps(payload, indent=2))
     else:
         print(render_text(reports, roots))
+    if args.quarantine_failed and not args.json:
+        quarantine_failed(reports, assume_yes=args.yes)
     return 1 if any(r.verdict == "FAIL" for r in reports) else 0
 
 
