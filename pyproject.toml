@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "skillcheckup"
-version = "0.4.2"
+version = "0.4.3"
 description = "Audit the AI skill files installed on your machine for validity, security risks, conflicts, and token cost."
 readme = "README.md"
 license = { text = "MIT" }
