@@ -192,3 +192,20 @@ class QuarantineTest(unittest.TestCase):
         result = sd.quarantine_failed(reports, assume_yes=False, input_fn=lambda prompt: "n")
         self.assertIsNone(result)
         self.assertTrue(os.path.exists(os.path.join(self.root, "bad-skill")))
+
+
+class ScoreTest(unittest.TestCase):
+    def test_clean_skill_scores_100_a(self):
+        root = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "examples")
+        reports = sd.scan([root])
+        clean = [r for r in reports if r.name == "clean-skill"][0]
+        self.assertEqual(clean.score, 100)
+        self.assertEqual(clean.grade, "A")
+
+    def test_errors_cost_points_and_carry_fixes(self):
+        root = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "examples")
+        reports = sd.scan([root])
+        risky = [r for r in reports if r.name == "risky-skill"][0]
+        self.assertLess(risky.score, 40)
+        fixes = [f.to_dict().get("fix") for f in risky.findings]
+        self.assertTrue(any(fixes))

@@ -1,3 +1,7 @@
+## v0.3.0
+
+The report learned to grade and to advise. Every skill now carries a score out of 100 with a letter grade, the installation gets one health score, and most findings come with a fix line that says exactly what to change. Twenty two tests pass.
+
 ## v0.2.2
 
 SkillDoctor now installs like a product instead of a download. One line puts a skilldoctor command on the machine, on Windows too, and the README leads with it. A pyproject.toml is in place so a PyPI release can follow without repackaging.

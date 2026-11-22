@@ -60,6 +60,10 @@ No installer fan? The whole tool is one file: download `skilldoctor.py` from thi
 - **WARN**: worth a human look, for example a reference to a credential store or a very long file.
 - **FAIL**: broken or dangerous. The report exits with code 1 when any skill fails, so it drops straight into CI.
 
+## Scores and fixes
+
+Every skill gets a score out of 100 and a letter grade, and so does the whole installation. Errors and high risk findings cost the most, warnings cost a little, and a clean skill sits at 100. Most findings also carry a fix line that says exactly what to change, so the report reads as a work list, not just a verdict.
+
 ## Removing what fails
 
 Finding a bad skill is only half the job, so SkillDoctor can clear it out too. Removal is deliberately boring and reversible:
