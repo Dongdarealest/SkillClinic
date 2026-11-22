@@ -104,7 +104,7 @@ Paste this into your README and it renders as the badge above:
 This repo doubles as a GitHub Action, so a collection can audit itself on every push:
 
 ```yaml
-- uses: Dongdarealest/skilldoctor@v0.2.1
+- uses: Dongdarealest/skilldoctor@v0.3.3
 ```
 
 It fails the build when any skill fails the audit. Anywhere else, the plain command does the same job in CI: `skilldoctor --json` for machines, exit code 1 on any FAIL.
