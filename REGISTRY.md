@@ -1,6 +1,6 @@
-# The SkillDoctor registry
+# The SkillClinic registry
 
-This registry is the public record of projects that have passed a SkillDoctor audit. It lives at [dongdarealest.github.io/skilldoctor](https://dongdarealest.github.io/skilldoctor/), and most projects in it got there by themselves: they wore the badge, and the registry found them.
+This registry is the public record of projects that have passed a SkillClinic audit. It lives at [dongdarealest.github.io/skillclinic](https://dongdarealest.github.io/skillclinic/), and most projects in it got there by themselves: they wore the badge, and the registry found them.
 
 ## The badge is not the proof
 
@@ -14,7 +14,7 @@ Enrollment is one paste. Your badge address carries your own GitHub identity, an
 https://skilldoctor-badges.vercel.app/badges/<owner>--<repo>.svg
 ```
 
-Build it from your owner and repo names, or use the generator at the top of the [registry page](https://dongdarealest.github.io/skilldoctor/), which builds the ready to paste badge and plaque snippets from a repo name. Paste the snippet into your README. That is the whole enrollment; there is no submission step.
+Build it from your owner and repo names, or use the generator at the top of the [registry page](https://dongdarealest.github.io/skillclinic/), which builds the ready to paste badge and plaque snippets from a repo name. Paste the snippet into your README. That is the whole enrollment; there is no submission step.
 
 A scheduled workflow (`.github/workflows/registry-verify.yml`, running `tools/registry_build.py`) then does the rest, every day:
 
@@ -30,7 +30,7 @@ One honest delay, and no broken images. The badge address answers from the momen
 
 - **Pending**: the badge is pasted but the repo has not been audited yet. The address shows the pending design, with no score.
 - **Current**: the latest daily audit passes. The images show the current score, the skill count and the verification month.
-- **No skills**: the project carries no auditable skills at all, because everything the audit found is sample data or because the repo simply has no skills in it. The images keep the standard gold design but read "No skills to audit", with no score: wearing the badge is not itself a result. SkillDoctor's own repo sits in this state, since it ships demo fixtures and no skills of its own.
+- **No skills**: the project carries no auditable skills at all, because everything the audit found is sample data or because the repo simply has no skills in it. The images keep the standard gold design but read "No skills to audit", with no score: wearing the badge is not itself a result. SkillClinic's own repo sits in this state, since it ships demo fixtures and no skills of its own.
 - **Recheck needed**: the latest daily audit fails, or the repo cannot be cloned or audited. The images flip to a grey recheck design with no score, and the registry entry says why. An old score is never silently kept: a project that stops passing stops showing it, and flips back the day it passes again.
 - **Dropped**: take the badge address out of your README and the next run removes the entry and its generated images. Projects listed by hand are removed the same way by the maintainers, on request.
 
@@ -40,7 +40,7 @@ The workflow searches with the token the maintainers give it. A dedicated search
 
 A project that wants a human check first, or a listing at a chosen folder instead of the repo root, can still ask:
 
-1. Run the audit with the badge flag: `skilldoctor ~/path/to/skills --write-badge`. On a passing audit this writes the badge, the plaque and `skilldoctor-report.json` into the audited folder. The report carries the SHA-256 hash of every audited SKILL.md, the health score, the verdict counts and the audit date.
+1. Run the audit with the badge flag: `skillclinic ~/path/to/skills --write-badge`. On a passing audit this writes the badge, the plaque and `skillclinic-report.json` into the audited folder. The report carries the SHA-256 hash of every audited SKILL.md, the health score, the verdict counts and the audit date.
 2. Open an issue in this repo and attach the report, or link your public repo and say where the report lives.
 3. The maintainers re-run the audit on the public repo and compare. The verdicts, the health score and the file hashes must match the submitted report. Only then is the project added to `registry/projects.json` by hand.
 
@@ -48,7 +48,7 @@ The static files that `--write-badge` writes remain useful as a dated snapshot, 
 
 ## The plain mark
 
-The mark at `https://skilldoctor-badges.vercel.app/badges/audited.svg` is the plain SkillDoctor symbol. It carries no score, names no repo, and enrolls nothing. Only a personal address is an enrollment.
+The mark at `https://skilldoctor-badges.vercel.app/badges/audited.svg` is the plain SkillClinic symbol. It carries no score, names no repo, and enrolls nothing. Only a personal address is an enrollment.
 
 ## Verified entries
 
@@ -58,4 +58,4 @@ The living record, with current scores and states, is the registry site. The fir
 | --- | --- | --- |
 | [SkillPort](https://github.com/Dongdarealest/skillport) | 2026-11-22 | Audited at its packs folder: 30 skills, 0 failures. Health score 98 |
 | [MuseKit](https://github.com/Dongdarealest/musekit) | 2026-11-22 | Audited at its starter-skills folder: 6 skills, 0 failures. Health score 100 |
-| [SkillDoctor](https://github.com/Dongdarealest/skilldoctor) | 2026-11-22 | Audited at its root: no skills of its own, only the demo fixtures under `examples/`, listed as not audited. State: No skills, no score |
+| [SkillClinic](https://github.com/Dongdarealest/skillclinic) | 2026-11-22 | Audited at its root: no skills of its own, only the demo fixtures under `examples/`, listed as not audited. State: No skills, no score |
