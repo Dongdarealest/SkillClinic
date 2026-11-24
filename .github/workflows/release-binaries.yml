@@ -11,11 +11,11 @@ jobs:
       matrix:
         include:
           - os: windows-latest
-            name: skilldoctor-windows.exe
+            name: skillclinic-windows.exe
           - os: macos-latest
-            name: skilldoctor-macos
+            name: skillclinic-macos
           - os: ubuntu-latest
-            name: skilldoctor-linux
+            name: skillclinic-linux
     runs-on: ${{ matrix.os }}
     permissions:
       contents: write
@@ -27,13 +27,13 @@ jobs:
       - name: Build the standalone executable
         run: |
           pip install pyinstaller
-          pyinstaller --onefile --name skilldoctor skilldoctor.py
+          pyinstaller --onefile --name skillclinic skillclinic.py
       - name: Attach it to the release
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          if [ -f dist/skilldoctor.exe ]; then mv dist/skilldoctor.exe "${{ matrix.name }}"; else mv dist/skilldoctor "${{ matrix.name }}"; fi
+          if [ -f dist/skillclinic.exe ]; then mv dist/skillclinic.exe "${{ matrix.name }}"; else mv dist/skillclinic "${{ matrix.name }}"; fi
           gh release upload "${{ github.event.release.tag_name }}" "${{ matrix.name }}"
 
   attach-source:
@@ -46,4 +46,4 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release upload "${{ github.event.release.tag_name }}" skilldoctor.py skilldoctor.py.sha256
+          gh release upload "${{ github.event.release.tag_name }}" skillclinic.py skillclinic.py.sha256
