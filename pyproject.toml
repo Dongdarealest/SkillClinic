@@ -3,15 +3,17 @@ requires = ["setuptools>=61"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "skillcheckup"
-version = "0.4.5"
+name = "skillclinic"
+version = "0.4.6"
 description = "Audit the AI skill files installed on your machine for validity, security risks, conflicts, and token cost."
 readme = "README.md"
 license = { text = "MIT" }
 requires-python = ">=3.10"
 
 [project.scripts]
-skilldoctor = "skilldoctor:main"
+skillclinic = "skillclinic:main"
+# Deprecated alias, kept so existing installs keep working.
+skilldoctor = "skillclinic:main"
 
 [tool.setuptools]
-py-modules = ["skilldoctor"]
+py-modules = ["skillclinic"]
