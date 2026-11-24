@@ -18,7 +18,7 @@ sys.path.insert(0, os.path.join(ROOT, "tools"))
 sys.path.insert(0, ROOT)
 
 import registry_build as rb
-import skilldoctor as sd
+import skillclinic as sd
 
 WHEN = datetime(2026, 11, 22)
 
@@ -190,27 +190,27 @@ class VerifyLocalTests(unittest.TestCase):
 class ParseIdentitiesTests(unittest.TestCase):
     def test_reads_owner_and_repo_out_of_badge_and_plaque_urls(self):
         texts = [
-            "[![x](https://dongdarealest.github.io/skilldoctor/badges/Alice--tools.svg)](y)",
-            '<img src="https://dongdarealest.github.io/skilldoctor/badges/Alice--tools-plaque.svg">',
+            "[![x](https://dongdarealest.github.io/skillclinic/badges/Alice--tools.svg)](y)",
+            '<img src="https://dongdarealest.github.io/skillclinic/badges/Alice--tools-plaque.svg">',
         ]
         found = rb.parse_identities(texts)
         self.assertEqual(found, {("alice", "tools"): ("Alice", "tools")})
 
     def test_the_plain_mark_enrolls_nothing(self):
-        texts = ["https://dongdarealest.github.io/skilldoctor/badges/audited.svg"]
+        texts = ["https://dongdarealest.github.io/skillclinic/badges/audited.svg"]
         self.assertEqual(rb.parse_identities(texts), {})
 
     def test_repo_names_with_hyphens_and_dots_survive(self):
         texts = [
-            "https://dongdarealest.github.io/skilldoctor/badges/Bob--my-cool.tools.svg",
-            "https://dongdarealest.github.io/skilldoctor/badges/Bob--my-cool.tools-plaque.svg",
+            "https://dongdarealest.github.io/skillclinic/badges/Bob--my-cool.tools.svg",
+            "https://dongdarealest.github.io/skillclinic/badges/Bob--my-cool.tools-plaque.svg",
         ]
         found = rb.parse_identities(texts)
         self.assertEqual(found, {("bob", "my-cool.tools"): ("Bob", "my-cool.tools")})
 
     def test_reads_owner_and_repo_out_of_endpoint_urls(self):
         texts = [
-            "[![Audited by SkillDoctor](https://skilldoctor-badges.vercel.app/badges/Dongdarealest--sdsc-community-api.svg)](https://dongdarealest.github.io/skilldoctor/)",
+            "[![Audited by SkillClinic](https://skilldoctor-badges.vercel.app/badges/Dongdarealest--sdsc-community-api.svg)](https://dongdarealest.github.io/skillclinic/)",
             '<img src="https://skilldoctor-badges.vercel.app/badges/Dongdarealest--sdsc-community-api-plaque.svg">',
         ]
         found = rb.parse_identities(texts)
@@ -229,7 +229,7 @@ class ParseIdentitiesTests(unittest.TestCase):
     def test_both_address_forms_can_mix(self):
         texts = [
             "https://skilldoctor-badges.vercel.app/badges/Carol--kit.svg",
-            "https://dongdarealest.github.io/skilldoctor/badges/Alice--tools.svg",
+            "https://dongdarealest.github.io/skillclinic/badges/Alice--tools.svg",
         ]
         found = rb.parse_identities(texts)
         self.assertEqual(
@@ -290,7 +290,7 @@ class ReconcileTests(unittest.TestCase):
         found = rb.discover_identities(
             "tok",
             search_fn=lambda: [
-                "see https://dongdarealest.github.io/skilldoctor/badges/Carol--kit.svg here",
+                "see https://dongdarealest.github.io/skillclinic/badges/Carol--kit.svg here",
             ],
         )
         self.assertEqual(found, {("carol", "kit"): ("Carol", "kit")})
