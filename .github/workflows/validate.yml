@@ -22,4 +22,4 @@ jobs:
         run: python -m unittest discover -s tests -v
       - name: Run the demo audit
         run: |
-          python skilldoctor.py --demo || test $? -eq 1
+          python skillclinic.py --demo || test $? -eq 1
