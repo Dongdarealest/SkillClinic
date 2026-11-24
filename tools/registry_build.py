@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build the live SkillDoctor registry site.
+"""Build the live SkillClinic registry site.
 
 The registry enrolls itself. A project that wants a listing pastes a
 snippet whose image address carries its own GitHub identity:
@@ -54,11 +54,11 @@ from datetime import datetime
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 
-import skilldoctor as sd
+import skillclinic as sd
 
 PROJECTS_FILE = os.path.join(ROOT, "registry", "projects.json")
 DOCS_DIR = os.path.join(ROOT, "docs")
-SITE_URL = "https://dongdarealest.github.io/skilldoctor"
+SITE_URL = "https://dongdarealest.github.io/skillclinic"
 # The one canonical badge address. Snippets, previews and the docs
 # build every badge URL from this base. The endpoint behind it always
 # answers with a real image (the pending design for a repo that has
@@ -67,7 +67,7 @@ SITE_URL = "https://dongdarealest.github.io/skilldoctor"
 # same images, regenerated on every run.
 BADGE_BASE_URL = "https://skilldoctor-badges.vercel.app/badges/"
 BADGE_MARKER = "skilldoctor-badges.vercel.app/badges/"
-LEGACY_BADGE_MARKER = "dongdarealest.github.io/skilldoctor/badges/"
+LEGACY_BADGE_MARKER = "dongdarealest.github.io/skillclinic/badges/"
 GENERIC_BADGE = "audited.svg"
 GENERIC_PLAQUE = "audited-plaque.svg"
 
@@ -153,7 +153,7 @@ def summarize(payload):
 
 IDENTITY_RE = re.compile(
     r"(?:skilldoctor-badges[.]vercel[.]app|"
-    r"dongdarealest[.]github[.]io/skilldoctor)/badges/"
+    r"dongdarealest[.]github[.]io/skillclinic)/badges/"
     r"([A-Za-z0-9_.-]+?)--([A-Za-z0-9_.-]+?)(?:-plaque)?[.]svg"
 )
 
@@ -403,7 +403,7 @@ def recheck_badge_svg():
         '<text x="62" y="11" font-family="%s" font-size="7.5" '
         'letter-spacing="1.5" fill="%s">AUDITED BY</text>'
         '<text x="62" y="23" font-family="%s" font-size="10.5" '
-        'font-weight="600" fill="%s">SKILLDOCTOR</text>'
+        'font-weight="600" fill="%s">SKILLCLINIC</text>'
         '<line x1="150" y1="6" x2="150" y2="22" stroke="%s" stroke-width="1"/>'
         '<text x="162" y="18" font-family="%s" font-size="10" '
         'fill="%s">RECHECK</text>'
@@ -438,7 +438,7 @@ def recheck_plaque_svg(when):
         'stroke-linecap="round"/>'
         '<line x1="156" y1="34" x2="156" y2="114" stroke="%s" stroke-width="1"/>'
         '<text x="180" y="52" font-family="%s" font-size="15" '
-        'letter-spacing="3" fill="%s">SKILLDOCTOR AUDITED</text>'
+        'letter-spacing="3" fill="%s">SKILLCLINIC AUDITED</text>'
         '<text x="180" y="92" font-family="%s" font-size="30" '
         'font-weight="600" fill="%s">Recheck needed</text>'
         '<text x="180" y="122" font-family="%s" font-size="15" '
@@ -491,7 +491,7 @@ def neutral_badge_svg():
         '<text x="62" y="11" font-family="%s" font-size="7.5" '
         'letter-spacing="1.5" fill="%s">AUDITED BY</text>'
         '<text x="62" y="23" font-family="%s" font-size="10.5" '
-        'font-weight="600" fill="%s">SKILLDOCTOR</text>'
+        'font-weight="600" fill="%s">SKILLCLINIC</text>'
         '<line x1="150" y1="6" x2="150" y2="22" stroke="%s" stroke-width="1"/>'
         '<text x="162" y="18" font-family="%s" font-size="10" '
         'fill="%s">NO SKILLS</text>'
@@ -659,10 +659,10 @@ section.block a:hover { text-decoration: underline; }
 
 HERO_HTML = """
 <header class="hero">
-  <p class="brand"><svg width="46" height="28" viewBox="0 0 46 28" aria-hidden="true"><polyline points="2,14 11,14 15,6 20,22 24,14 42,14" fill="none" stroke="#C9A35F" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/></svg>SkillDoctor</p>
+  <p class="brand"><svg width="46" height="28" viewBox="0 0 46 28" aria-hidden="true"><polyline points="2,14 11,14 15,6 20,22 24,14 42,14" fill="none" stroke="#C9A35F" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/></svg>SkillClinic</p>
   <h1>A live trust mark for AI skills. Wear the badge, get audited every day, and your score is always the true one.</h1>
-  <p class="sub">SkillDoctor audits the skills your AI runs, the files a host loads into every conversation. Projects that pass earn the plaque below, served live from this registry and re-checked daily.</p>
-  <p><img class="plaque" src="__BADGE_BASE_URL__audited-plaque.svg" onerror="this.onerror=null;this.src='badges/audited-plaque.svg'" alt="The SkillDoctor audited plaque: the mark of a checked skill" width="560"></p>
+  <p class="sub">SkillClinic audits the skills your AI runs, the files a host loads into every conversation. Projects that pass earn the plaque below, served live from this registry and re-checked daily.</p>
+  <p><img class="plaque" src="__BADGE_BASE_URL__audited-plaque.svg" onerror="this.onerror=null;this.src='badges/audited-plaque.svg'" alt="The SkillClinic audited plaque: the mark of a checked skill" width="560"></p>
 </header>
 """
 
@@ -680,8 +680,8 @@ GENERATOR_HTML = """
   <p class="note" id="repo-error" hidden>That does not look like a GitHub owner and repo yet.</p>
   <div class="preview">
     <p class="preview-label">This is what your badge and plaque look like. Type your repo above and the preview switches to your personal addresses.</p>
-    <img class="badge" id="preview-badge" src="__BADGE_BASE_URL__audited.svg" onerror="this.onerror=null;this.src='badges/audited.svg'" alt="Your SkillDoctor badge, as it will appear" height="28">
-    <img class="plaque" id="preview-plaque" src="__BADGE_BASE_URL__audited-plaque.svg" onerror="this.onerror=null;this.src='badges/audited-plaque.svg'" alt="Your SkillDoctor plaque, as it will appear" width="560">
+    <img class="badge" id="preview-badge" src="__BADGE_BASE_URL__audited.svg" onerror="this.onerror=null;this.src='badges/audited.svg'" alt="Your SkillClinic badge, as it will appear" height="28">
+    <img class="plaque" id="preview-plaque" src="__BADGE_BASE_URL__audited-plaque.svg" onerror="this.onerror=null;this.src='badges/audited-plaque.svg'" alt="Your SkillClinic plaque, as it will appear" width="560">
     <p class="note">Your address answers with this pending design from the moment you paste it, never a broken image. At the next daily verification run the same address switches to your true score.</p>
   </div>
   <div id="repo-out" hidden>
@@ -715,7 +715,7 @@ HOW_HTML = """
 CHECKS_HTML = """
 <section class="block">
   <h2>What the audit checks</h2>
-  <p>Every listed project is re-audited with the current SkillDoctor release. The audit reads every skill in the project, and every file bundled with it, and checks:</p>
+  <p>Every listed project is re-audited with the current SkillClinic release. The audit reads every skill in the project, and every file bundled with it, and checks:</p>
   <ul class="checks">
     <li><strong>Validity and spec limits.</strong> Frontmatter and required fields, names that match their folders, names within 64 characters and descriptions within 1,024.</li>
     <li><strong>Security.</strong> Instruction override and data exfiltration language, credential store access, destructive shell commands, long opaque blobs, and hidden Unicode: bidi controls, zero width characters and tag characters that can hide instructions from a human reader.</li>
@@ -723,7 +723,7 @@ CHECKS_HTML = """
     <li><strong>Token cost, split honestly.</strong> The always-on cost of names and descriptions, which a host loads into every conversation, reported separately from the per-use cost of skill bodies.</li>
     <li><strong>Conflicts.</strong> Duplicate skill names and near duplicate descriptions that could make a host load the wrong skill.</li>
   </ul>
-  <p>The evidence behind the checks is <a href="https://github.com/Dongdarealest/skilldoctor/blob/main/AUDIT.md">the audit of 777 public skills</a>, and the listing rules live in <a href="https://github.com/Dongdarealest/skilldoctor/blob/main/REGISTRY.md">REGISTRY.md</a>.</p>
+  <p>The evidence behind the checks is <a href="https://github.com/Dongdarealest/skillclinic/blob/main/AUDIT.md">the audit of 777 public skills</a>, and the listing rules live in <a href="https://github.com/Dongdarealest/skillclinic/blob/main/REGISTRY.md">REGISTRY.md</a>.</p>
 </section>
 """
 
@@ -746,7 +746,7 @@ HONESTY_HTML = """
 
 GENERATOR_JS = """
 (function () {
-  var SITE = "https://dongdarealest.github.io/skilldoctor";
+  var SITE = "https://dongdarealest.github.io/skillclinic";
   var BADGES = "__BADGE_BASE_URL__";
   function parseRepo(raw) {
     var s = raw.trim();
@@ -789,10 +789,10 @@ GENERATOR_JS = """
     err.hidden = true;
     var base = BADGES + parts[0] + "--" + parts[1];
     document.getElementById("badge-snippet").textContent =
-      "[![Audited by SkillDoctor](" + base + ".svg)](" + SITE + "/)";
+      "[![Audited by SkillClinic](" + base + ".svg)](" + SITE + "/)";
     document.getElementById("plaque-snippet").textContent =
       '<a href="' + SITE + '/"><img src="' + base +
-      '-plaque.svg" alt="SkillDoctor audited plaque" width="560"></a>';
+      '-plaque.svg" alt="SkillClinic audited plaque" width="560"></a>';
     updatePreviews(parts);
     out.hidden = false;
   });
@@ -824,8 +824,8 @@ def render_project(entry):
     if entry.get("note"):
         note = '<p class="note">%s</p>' % html.escape(entry["note"])
     snippet = (
-        "[![Audited by SkillDoctor](%s)](%s/)\n\n"
-        '<a href="%s/"><img src="%s" alt="SkillDoctor audited plaque" '
+        "[![Audited by SkillClinic](%s)](%s/)\n\n"
+        '<a href="%s/"><img src="%s" alt="SkillClinic audited plaque" '
         'width="560"></a>' % (badge_url, SITE_URL, SITE_URL, plaque_url)
     )
     return (
@@ -866,7 +866,7 @@ def render_index(entries, when):
         "<head>",
         '<meta charset="utf-8">',
         '<meta name="viewport" content="width=device-width, initial-scale=1">',
-        "<title>SkillDoctor registry: live badges for audited AI skills</title>",
+        "<title>SkillClinic registry: live badges for audited AI skills</title>",
         "<style>",
         PAGE_CSS,
         "</style>",
@@ -882,9 +882,9 @@ def render_index(entries, when):
         HONESTY_HTML,
         "</main>",
         "<footer>",
-        '<p>Run by <a href="https://github.com/Dongdarealest/skilldoctor">SkillDoctor</a>. '
+        '<p>Run by <a href="https://github.com/Dongdarealest/skillclinic">SkillClinic</a>. '
         "How listing and verification work: "
-        '<a href="https://github.com/Dongdarealest/skilldoctor/blob/main/REGISTRY.md">REGISTRY.md</a>. '
+        '<a href="https://github.com/Dongdarealest/skillclinic/blob/main/REGISTRY.md">REGISTRY.md</a>. '
         'The machine readable state is <a href="registry.json">registry.json</a>. '
         "Last rebuilt " + when.strftime("%Y-%m-%d") + ".</p>",
         "</footer>",
