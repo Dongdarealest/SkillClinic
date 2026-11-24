@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Visual assets for the SkillDoctor README: a masthead and a demo shot.
+"""Visual assets for the SkillClinic README: a masthead and a demo shot.
 The demo image renders the tool's real --demo output inside a terminal
 window, so a visitor sees exactly what the tool prints.
 """
@@ -32,7 +32,7 @@ BONE = (242, 239, 233); GOLD = (169, 139, 79); MUT = (138, 134, 128)
 pts = [(120, 300), (760, 300), (830, 300), (880, 190), (950, 420), (1010, 300), (1500, 300), (1560, 240), (1620, 300), (2120, 300)]
 d.line(pts, fill=GOLD, width=5, joint="curve")
 # title
-t = "SkillDoctor"; fnt = F(SERIF, 215)
+t = "SkillClinic"; fnt = F(SERIF, 215)
 tw = d.textlength(t, font=fnt)
 d.text(((W - tw) / 2, 470), t, font=fnt, fill=BONE)
 # gold caps line
@@ -48,7 +48,7 @@ d.text(((W - tw) / 2, 830), c, font=f3, fill=(200, 195, 185))
 img.save(os.path.join(A, "masthead.png"))
 
 # ---------------------------------------------------------------- demo shot
-out = subprocess.run([sys.executable, os.path.join(HERE, "skilldoctor.py"), "--demo"],
+out = subprocess.run([sys.executable, os.path.join(HERE, "skillclinic.py"), "--demo"],
                      capture_output=True, text=True).stdout.rstrip("\n").split("\n")
 FS = 25
 LH = 37
@@ -60,7 +60,7 @@ d = ImageDraw.Draw(img)
 # window chrome
 for i, col in enumerate([(224, 92, 84), (224, 182, 84), (84, 190, 110)]):
     d.ellipse([34 + i * 40, 32, 58 + i * 40, 56], fill=col)
-tt = "skilldoctor --demo"
+tt = "skillclinic --demo"
 fnt = F(MONO, 22)
 d.text(((W2 - d.textlength(tt, font=fnt)) / 2, 32), tt, font=fnt, fill=(150, 155, 150))
 d.line([(0, 92), (W2, 92)], fill=(52, 57, 60), width=2)
@@ -71,7 +71,7 @@ for line in out:
     if line.startswith("FAIL"): col = RED; fnt = F(MONOB, FS)
     elif line.startswith("OK"): col = GREEN; fnt = F(MONOB, FS)
     elif line.startswith("WARN"): col = AMBER; fnt = F(MONOB, FS)
-    elif line.startswith("SkillDoctor"): col = (242, 239, 233); fnt = F(MONOB, FS)
+    elif line.startswith("SkillClinic"): col = (242, 239, 233); fnt = F(MONOB, FS)
     elif "[high]" in line or "[error]" in line: col = (240, 170, 162)
     elif "[warn]" in line: col = (238, 205, 140)
     elif line.startswith("Summary") or line.startswith("Always-on"): col = (242, 239, 233)
