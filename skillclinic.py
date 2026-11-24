@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""SkillDoctor: audit the AI skill files installed on your machine.
+"""SkillClinic: audit the AI skill files installed on your machine.
 
-Your AI is running skills you never audited. SkillDoctor scans the skill
+Your AI is running skills you never audited. SkillClinic scans the skill
 folders used by common AI coding hosts, then checks every SKILL.md it finds
 for four things in one pass:
 
@@ -27,11 +27,11 @@ is a separate step you ask for, and it quarantines instead of deleting,
 so anything removed can be restored.
 
 Usage:
-    python3 skilldoctor.py                 scan the default skill folders
-    python3 skilldoctor.py ~/my/skills     scan a specific folder
-    python3 skilldoctor.py --demo          audit the bundled examples
-    python3 skilldoctor.py --json          machine readable report
-    python3 skilldoctor.py --write-badge ~/my/skills
+    python3 skillclinic.py                 scan the default skill folders
+    python3 skillclinic.py ~/my/skills     scan a specific folder
+    python3 skillclinic.py --demo          audit the bundled examples
+    python3 skillclinic.py --json          machine readable report
+    python3 skillclinic.py --write-badge ~/my/skills
                       on a passing audit, write the earned badge, the
                       plaque and the machine report into the folder
 
@@ -48,7 +48,7 @@ import shutil
 import sys
 from datetime import datetime
 
-VERSION = "0.4.5"
+VERSION = "0.4.6"
 
 DEFAULT_LOCATIONS = [
     "~/.claude/skills",
@@ -695,7 +695,7 @@ def badge_svg(score=None, month=None):
         '<text x="62" y="11" font-family="%s" font-size="7.5" '
         'letter-spacing="1.5" fill="#8A8680">AUDITED BY</text>'
         '<text x="62" y="23" font-family="%s" font-size="10.5" '
-        'font-weight="600" fill="#F2EFE9">SKILLDOCTOR</text>'
+        'font-weight="600" fill="#F2EFE9">SKILLCLINIC</text>'
         % (BADGE_FONT, BADGE_FONT)
     )
     extra = ""
@@ -735,7 +735,7 @@ def plaque_svg(main_line, sub_line, fit=False):
         'stroke-linecap="round"/>'
         '<line x1="156" y1="34" x2="156" y2="114" stroke="#3A3A3A" stroke-width="1"/>'
         '<text x="180" y="52" font-family="%s" font-size="15" '
-        'letter-spacing="3" fill="#C9A35F">SKILLDOCTOR AUDITED</text>'
+        'letter-spacing="3" fill="#C9A35F">SKILLCLINIC AUDITED</text>'
         '<text x="180" y="92" font-family="%s" font-size="30" '
         'font-weight="600" fill="#F2EFE9"%s>%s</text>'
         '<text x="180" y="122" font-family="%s" font-size="15" '
@@ -861,7 +861,7 @@ def display_path(path):
 def render_text(reports, roots, samples=None):
     samples = samples or []
     lines = []
-    lines.append("SkillDoctor %s" % VERSION)
+    lines.append("SkillClinic %s" % VERSION)
     shown = [display_path(os.path.abspath(os.path.expanduser(r))) for r in roots]
     lines.append("Scanned: %s" % (", ".join(shown) if shown else "no locations found"))
     if reports:
@@ -879,10 +879,10 @@ def render_text(reports, roots, samples=None):
     if not reports and not samples:
         lines.append("No skills found. Nothing to audit.")
         lines.append("")
-        lines.append("SkillDoctor looked in the usual host folders. To audit a folder directly:")
-        lines.append("  skilldoctor ~/path/to/skills")
+        lines.append("SkillClinic looked in the usual host folders. To audit a folder directly:")
+        lines.append("  skillclinic ~/path/to/skills")
         lines.append("To see what a report looks like first:")
-        lines.append("  skilldoctor --demo")
+        lines.append("  skillclinic --demo")
         return "\n".join(lines)
     total_always_on = 0
     total_body = 0
@@ -941,7 +941,7 @@ def render_text(reports, roots, samples=None):
     if failed:
         freed = sum(r.always_on_tokens for r in failed)
         lines.append(
-            "Next step: skilldoctor --quarantine-failed moves the %d failed skill(s) out, "
+            "Next step: skillclinic --quarantine-failed moves the %d failed skill(s) out, "
             "frees ~%d always-on tokens from every conversation, and keeps them restorable."
             % (len(failed), freed)
         )
@@ -949,7 +949,7 @@ def render_text(reports, roots, samples=None):
         lines.append("")
         lines.append(
             "Badge earned: this audit passed with a health score of %d/100, "
-            "so this project has earned the SkillDoctor badge." % health
+            "so this project has earned the SkillClinic badge." % health
         )
         lines.append(
             "The badge worth wearing is the live one. Your badge "
@@ -965,8 +965,8 @@ def render_text(reports, roots, samples=None):
         )
         lines.append(
             "Prefer a human check, or a listing at a chosen folder "
-            "instead of the repo root? Open an issue in the skilldoctor "
-            "repo and attach skilldoctor-report.json, or link your "
+            "instead of the repo root? Open an issue in the skillclinic "
+            "repo and attach skillclinic-report.json, or link your "
             "public repo, and the maintainers verify and list it by "
             "hand."
         )
@@ -1020,17 +1020,17 @@ def write_badge_files(reports, roots, samples=None):
     health = round(sum(r.score for r in reports) / len(reports))
     now = datetime.now()
     root = os.path.abspath(os.path.expanduser(roots[0]))
-    badge_path = os.path.join(root, "skilldoctor-badge.svg")
+    badge_path = os.path.join(root, "skillclinic-badge.svg")
     with open(badge_path, "w", encoding="utf-8") as fh:
         fh.write(badge_svg(score=health, month=now.strftime("%b %Y").upper()) + "\n")
-    plaque_path = os.path.join(root, "skilldoctor-plaque.svg")
+    plaque_path = os.path.join(root, "skillclinic-plaque.svg")
     sub_line = "%d skills · 0 failures · %s" % (
         len(reports),
         now.strftime("%B %Y"),
     )
     with open(plaque_path, "w", encoding="utf-8") as fh:
         fh.write(plaque_svg("Health %d / 100" % health, sub_line) + "\n")
-    report_path = os.path.join(root, "skilldoctor-report.json")
+    report_path = os.path.join(root, "skillclinic-report.json")
     with open(report_path, "w", encoding="utf-8") as fh:
         json.dump(build_payload(reports, roots, samples), fh, indent=2)
     return (
@@ -1090,7 +1090,7 @@ def demo_root():
     if os.path.isdir(bundled) and any(f == "SKILL.md" for _, _, fs in os.walk(bundled) for f in fs):
         return bundled
     import tempfile
-    root = tempfile.mkdtemp(prefix="skilldoctor-demo-")
+    root = tempfile.mkdtemp(prefix="skillclinic-demo-")
     for folder, text in DEMO_FIXTURES.items():
         path = os.path.join(root, folder)
         os.makedirs(path)
@@ -1100,7 +1100,7 @@ def demo_root():
 
 
 def quarantine_dir():
-    return os.path.join(os.path.expanduser("~"), ".skilldoctor", "quarantine")
+    return os.path.join(os.path.expanduser("~"), ".skillclinic", "quarantine")
 
 
 def quarantine_failed(reports, assume_yes=False, input_fn=input):
@@ -1131,7 +1131,7 @@ def quarantine_failed(reports, assume_yes=False, input_fn=input):
     with open(os.path.join(batch, "manifest.json"), "w", encoding="utf-8") as fh:
         json.dump(manifest, fh, indent=1)
     print("Quarantined %d skill(s) in %s" % (len(failed), display_path(batch)))
-    print("Undo any time with: python3 skilldoctor.py --restore")
+    print("Undo any time with: python3 skillclinic.py --restore")
     return batch
 
 
@@ -1161,7 +1161,7 @@ def restore_last():
 
 def main(argv=None):
     parser = argparse.ArgumentParser(
-        prog="skilldoctor",
+        prog="skillclinic",
         description="Audit the AI skill files installed on your machine.",
     )
     parser.add_argument("paths", nargs="*", help="skill folders to scan instead of the defaults")
@@ -1170,13 +1170,18 @@ def main(argv=None):
     parser.add_argument("--write-badge", action="store_true",
                         help="on a passing audit, write the earned badge, plaque and report into the audited folder")
     parser.add_argument("--quarantine-failed", action="store_true",
-                        help="after the audit, move every FAIL skill into ~/.skilldoctor/quarantine")
+                        help="after the audit, move every FAIL skill into ~/.skillclinic/quarantine")
     parser.add_argument("--yes", action="store_true",
                         help="skip the confirmation prompt (for scripts)")
     parser.add_argument("--restore", action="store_true",
                         help="move the most recent quarantine batch back and exit")
-    parser.add_argument("--version", action="version", version="SkillDoctor " + VERSION)
+    parser.add_argument("--version", action="version", version="SkillClinic " + VERSION)
     args = parser.parse_args(argv)
+
+    if os.path.basename(sys.argv[0]).startswith("skilldoctor"):
+        print("Note: the skilldoctor command is now skillclinic. "
+              "Install the skillclinic package and use the skillclinic command.",
+              file=sys.stderr)
 
     if args.restore:
         restore_last()

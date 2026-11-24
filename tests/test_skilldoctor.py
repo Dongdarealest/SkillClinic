@@ -1,4 +1,4 @@
-"""Unit tests for SkillDoctor. Standard library only.
+"""Unit tests for SkillClinic. Standard library only.
 
 Run from the project root:
     python3 -m unittest discover -s tests -v
@@ -11,7 +11,7 @@ import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import skilldoctor as sd
+import skillclinic as sd
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 EXAMPLES = os.path.join(os.path.dirname(HERE), "examples")
@@ -259,12 +259,12 @@ class GuidanceTest(unittest.TestCase):
     def test_failing_report_ends_with_next_step(self):
         root = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "examples")
         text = sd.render_text(sd.scan([root]), [root])
-        self.assertIn("Next step: skilldoctor --quarantine-failed", text)
+        self.assertIn("Next step: skillclinic --quarantine-failed", text)
         self.assertIn("Health score:", text)
 
     def test_empty_report_guides_instead_of_dead_ending(self):
         text = sd.render_text([], ["/nonexistent"])
-        self.assertIn("skilldoctor --demo", text)
+        self.assertIn("skillclinic --demo", text)
 
 
 class NestedDiscoveryTest(unittest.TestCase):
@@ -600,12 +600,12 @@ class BadgeTests(unittest.TestCase):
     def test_generic_badge_svg_is_the_plain_mark(self):
         svg = sd.badge_svg()
         self.assertIn('width="176"', svg)
-        self.assertIn("SKILLDOCTOR", svg)
+        self.assertIn("SKILLCLINIC", svg)
 
     def test_personalized_plaque_svg_contains_score_line(self):
         svg = sd.plaque_svg("Health 92 / 100", "3 skills · 0 failures · November 2026")
         self.assertIn("Health 92 / 100", svg)
-        self.assertIn("SKILLDOCTOR AUDITED", svg)
+        self.assertIn("SKILLCLINIC AUDITED", svg)
         self.assertIn('width="560"', svg)
 
     def test_write_badge_on_pass_writes_badge_plaque_and_report(self):
@@ -613,9 +613,9 @@ class BadgeTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             self.write_clean(tmp)
             self.assertEqual(sd.main([tmp, "--write-badge"]), 0)
-            badge_path = os.path.join(tmp, "skilldoctor-badge.svg")
-            plaque_path = os.path.join(tmp, "skilldoctor-plaque.svg")
-            report_path = os.path.join(tmp, "skilldoctor-report.json")
+            badge_path = os.path.join(tmp, "skillclinic-badge.svg")
+            plaque_path = os.path.join(tmp, "skillclinic-plaque.svg")
+            report_path = os.path.join(tmp, "skillclinic-report.json")
             for path in (badge_path, plaque_path, report_path):
                 self.assertTrue(os.path.exists(path), path)
             with open(badge_path, encoding="utf-8") as fh:
@@ -642,7 +642,7 @@ class BadgeTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             write_skill(tmp, "broken", "---\nname: Wrong_Name\n---\n\nNo description.\n")
             self.assertEqual(sd.main([tmp, "--write-badge"]), 1)
-            for name in ("skilldoctor-badge.svg", "skilldoctor-plaque.svg", "skilldoctor-report.json"):
+            for name in ("skillclinic-badge.svg", "skillclinic-plaque.svg", "skillclinic-report.json"):
                 self.assertFalse(os.path.exists(os.path.join(tmp, name)), name)
 
     def test_pass_block_appears_only_on_a_passing_audit(self):

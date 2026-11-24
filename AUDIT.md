@@ -1,8 +1,10 @@
 # The State of Public Skills
 
-An audit of the six biggest public skill collections, conducted with SkillDoctor on 22 November 2026.
+> Note: this report was produced on 22 November 2026, when the tool was still called SkillDoctor. It was renamed to SkillClinic on 24 November 2026; nothing in the audit itself changed.
 
-Conducted with SkillDoctor (github.com/Dongdarealest/skilldoctor), 22 November 2026. Every SKILL.md file was fetched as plain text through the GitHub API and audited for validity, security patterns, conflicts, and token cost. Patterns are heuristic: a FAIL means read this before trusting it, not proof of malice.
+An audit of the six biggest public skill collections, conducted with SkillClinic on 22 November 2026.
+
+Conducted with SkillClinic (github.com/Dongdarealest/skillclinic), 22 November 2026. Every SKILL.md file was fetched as plain text through the GitHub API and audited for validity, security patterns, conflicts, and token cost. Patterns are heuristic: a FAIL means read this before trusting it, not proof of malice.
 
 Audited 777 skills: 310 OK (40%), 200 WARN (26%), 267 FAIL (34%).
 
@@ -25,4 +27,4 @@ Across all six collections, the most common findings were mentions of API keys, 
 
 ## Method and limits
 
-SkillDoctor checks four things: frontmatter validity and naming, a set of security patterns matched on the text, conflicts between installed skills, and estimated token cost. It does not execute anything and does not judge whether a skill is good at its job. ECC was capped at its first 500 SKILL.md files. Star counts are as of the audit date. One correction on the token figures quoted when this audit was first published: they were computed from the full text of each SKILL.md, so they measure total text size. Only a skill's name and description are loaded into every conversation; the body loads when the skill is used. SkillDoctor 0.3.8 and later report the two costs separately.
+SkillClinic checks four things: frontmatter validity and naming, a set of security patterns matched on the text, conflicts between installed skills, and estimated token cost. It does not execute anything and does not judge whether a skill is good at its job. ECC was capped at its first 500 SKILL.md files. Star counts are as of the audit date. One correction on the token figures quoted when this audit was first published: they were computed from the full text of each SKILL.md, so they measure total text size. Only a skill's name and description are loaded into every conversation; the body loads when the skill is used. SkillClinic 0.3.8 and later report the two costs separately.

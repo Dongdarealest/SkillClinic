@@ -1,3 +1,7 @@
+## v0.4.6
+
+Renamed from SkillDoctor to SkillClinic. The old name collided with several existing Claude skills called skill-doctor and with a PyPI package of the same name, so the project, the PyPI package (now `skillclinic`, replacing `skillcheckup`), the module (`skillclinic.py`), the command (`skillclinic`), the installer assets, the registry entry and the badges all move to the new name. The audit itself is unchanged: same checks, same scores, same 99 tests. The old `skilldoctor` command still works as a deprecated alias and prints a pointer to the new name; the old `skillcheckup` package will get one final release that points at `skillclinic`. Old repo links redirect to the new repo name automatically.
+
 ## v0.4.5
 
 A placement fix. The generic audited plaque restored in v0.4.4 sat deep in the README, inside Show your audit, where a returning reader would never find it. In v0.4.1 it lived in its place of honor directly under the badge row, and it is back there now, with its original words: projects that pass the audit earn this plaque, the picture alone proves nothing, and the registry entry is the proof. Show your audit keeps the full enrollment explanation and simply points back to the plaque at the top of the page, so the plaque image appears exactly once in the README. No tool behavior changes in this release. Ninety nine tests pass.

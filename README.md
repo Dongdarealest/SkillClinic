@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/Dongdarealest/skilldoctor/main/assets/masthead.png" alt="SkillDoctor: a checkup for the skills your AI runs" width="880">
+  <img src="https://raw.githubusercontent.com/Dongdarealest/skillclinic/main/assets/masthead.png" alt="SkillClinic: a checkup for the skills your AI runs" width="880">
 </p>
 
 <p align="center">
@@ -8,30 +8,30 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/Dongdarealest/skilldoctor/releases"><img src="https://img.shields.io/github/v/release/Dongdarealest/skilldoctor?style=flat-square&color=141414&label=release" alt="Latest release"></a>
+  <a href="https://github.com/Dongdarealest/skillclinic/releases"><img src="https://img.shields.io/github/v/release/Dongdarealest/skillclinic?style=flat-square&color=141414&label=release" alt="Latest release"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-141414?style=flat-square" alt="MIT license"></a>
   <img src="https://img.shields.io/badge/python-3.10%2B-141414?style=flat-square" alt="Python 3.10 or newer">
   <img src="https://img.shields.io/badge/dependencies-zero-141414?style=flat-square" alt="Zero dependencies">
-  <img src="https://visitor-badge.laobi.icu/badge?page_id=Dongdarealest.skilldoctor" alt="Visitors">
-  <a href="https://dongdarealest.github.io/skilldoctor/"><img src="https://skilldoctor-badges.vercel.app/badges/Dongdarealest--skilldoctor.svg" alt="Audited by SkillDoctor"></a>
+  <img src="https://visitor-badge.laobi.icu/badge?page_id=Dongdarealest.skillclinic" alt="Visitors">
+  <a href="https://dongdarealest.github.io/skillclinic/"><img src="https://skilldoctor-badges.vercel.app/badges/Dongdarealest--skillclinic.svg" alt="Audited by SkillClinic"></a>
 </p>
 
 <p align="center">
-  <a href="https://github.com/Dongdarealest/skilldoctor/blob/main/REGISTRY.md"><img src="https://raw.githubusercontent.com/Dongdarealest/skilldoctor/main/assets/audited-plaque.svg" alt="The SkillDoctor audited plaque: the mark of a checked skill" width="560"></a>
+  <a href="https://github.com/Dongdarealest/skillclinic/blob/main/REGISTRY.md"><img src="https://raw.githubusercontent.com/Dongdarealest/skillclinic/main/assets/audited-plaque.svg" alt="The SkillClinic audited plaque: the mark of a checked skill" width="560"></a>
 </p>
 
-Projects that pass the audit earn this plaque. The picture alone proves nothing, and anyone can paste one: the proof is the entry in the registry, kept live at [dongdarealest.github.io/skilldoctor](https://dongdarealest.github.io/skilldoctor/).
+Projects that pass the audit earn this plaque. The picture alone proves nothing, and anyone can paste one: the proof is the entry in the registry, kept live at [dongdarealest.github.io/skillclinic](https://dongdarealest.github.io/skillclinic/).
 
-Skills are instruction files your AI loads and follows, often at the start of every conversation. Most people install them from repositories, gists, and chat messages without ever reading them. SkillDoctor reads them for you. This is what an audit looks like:
+Skills are instruction files your AI loads and follows, often at the start of every conversation. Most people install them from repositories, gists, and chat messages without ever reading them. SkillClinic reads them for you. This is what an audit looks like:
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/Dongdarealest/skilldoctor/main/assets/demo.png" alt="SkillDoctor demo output: one clean skill passes, an invalid skill and a risky skill fail with reasons" width="880">
+  <img src="https://raw.githubusercontent.com/Dongdarealest/skillclinic/main/assets/demo.png" alt="SkillClinic demo output: one clean skill passes, an invalid skill and a risky skill fail with reasons" width="880">
 </p>
 
 <p align="center"><em>One clean skill passes. Two fail, every failure with its reason and its fix.</em></p>
 
 ```text
-$ skilldoctor --demo
+$ skillclinic --demo
 
 FAIL  Invalid_Skill Name
       folder: examples/invalid-skill
@@ -59,12 +59,12 @@ Health score: 42/100 (D)
 ## Quick start
 
 ```bash
-pip install skillcheckup   # the skillcheckup package installs the skilldoctor command
-skilldoctor                # audit the skill folders on this machine
-skilldoctor --demo         # see it work in ten seconds on the bundled examples
+pip install skillclinic   # the skillclinic package installs the skillclinic command
+skillclinic                # audit the skill folders on this machine
+skillclinic --demo         # see it work in ten seconds on the bundled examples
 ```
 
-Point it at any folder to audit just that folder, and add `--json` for machine readable output in scripts and CI. No installer fan? The whole tool is one file: download `skilldoctor.py` from this repo and run it the same way. It needs Python 3.10 or newer and nothing else.
+Point it at any folder to audit just that folder, and add `--json` for machine readable output in scripts and CI. No installer fan? The whole tool is one file: download `skillclinic.py` from this repo and run it the same way. It needs Python 3.10 or newer and nothing else.
 
 <details>
 <summary>One line installers, pinned and checksum verified</summary>
@@ -72,14 +72,14 @@ Point it at any folder to audit just that folder, and add `--json` for machine r
 <br>
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Dongdarealest/skilldoctor/v0.3.9/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Dongdarealest/skillclinic/v0.4.6/install.sh | bash
 ```
 
 ```powershell
-irm https://raw.githubusercontent.com/Dongdarealest/skilldoctor/v0.3.9/install.ps1 | iex
+irm https://raw.githubusercontent.com/Dongdarealest/skillclinic/v0.4.6/install.ps1 | iex
 ```
 
-Both installers are pinned to the v0.3.9 release: they download `skilldoctor.py` and its published SHA-256 as assets of that release and check the two match before installing, refusing on any mismatch. The tool audits installers it would not trust, so its own had to pass.
+Both installers are pinned to the v0.4.6 release: they download `skillclinic.py` and its published SHA-256 as assets of that release and check the two match before installing, refusing on any mismatch. The tool audits installers it would not trust, so its own had to pass.
 
 </details>
 
@@ -103,20 +103,20 @@ Every skill also gets a score out of 100 and a letter grade, and so does the who
 
 ## Removing what fails
 
-Finding a bad skill is only half the job, so SkillDoctor can clear it out too. Removal is deliberately boring and reversible:
+Finding a bad skill is only half the job, so SkillClinic can clear it out too. Removal is deliberately boring and reversible:
 
 ```bash
-skilldoctor --quarantine-failed   # move every FAIL skill out of its host folder
-skilldoctor --restore             # put the last batch back
+skillclinic --quarantine-failed   # move every FAIL skill out of its host folder
+skillclinic --restore             # put the last batch back
 ```
 
-Nothing is deleted outright. Failed skills move to `~/.skilldoctor/quarantine` in a dated batch with a manifest of where each one came from, and `--restore` puts the most recent batch back exactly where it was. Only FAIL verdicts are moved; a WARN is a judgment call, and judgment calls stay yours. Add `--yes` to skip the confirmation prompt in scripts.
+Nothing is deleted outright. Failed skills move to `~/.skillclinic/quarantine` in a dated batch with a manifest of where each one came from, and `--restore` puts the most recent batch back exactly where it was. Only FAIL verdicts are moved; a WARN is a judgment call, and judgment calls stay yours. Add `--yes` to skip the confirmation prompt in scripts.
 
 ---
 
 ## The State of Public Skills
 
-We pointed SkillDoctor at the six biggest public skill collections. One in three skills failed.
+We pointed SkillClinic at the six biggest public skill collections. One in three skills failed.
 
 <table align="center">
   <tr>
@@ -154,28 +154,28 @@ https://skilldoctor-badges.vercel.app/badges/<owner>--<repo>.svg
 Paste it into your README:
 
 ```markdown
-[![Audited by SkillDoctor](https://skilldoctor-badges.vercel.app/badges/<owner>--<repo>.svg)](https://dongdarealest.github.io/skilldoctor/)
+[![Audited by SkillClinic](https://skilldoctor-badges.vercel.app/badges/<owner>--<repo>.svg)](https://dongdarealest.github.io/skillclinic/)
 ```
 
-That paste is the whole enrollment. A daily job searches GitHub for the badge address, reads the owner and repo out of the address itself, audits that repo, and lists it in the registry with its real score. A brand new badge can take some hours to be discovered, while GitHub indexes it. Until the first verification the address serves a pending design, so it never renders as a broken image; from then on it serves the current result, and if the project stops passing it flips to a grey recheck design until it passes again. Take the badge out of your README and the listing is dropped on the next run. The generator on the [registry page](https://dongdarealest.github.io/skilldoctor/) builds the ready to paste snippet for you, and the same address with `-plaque` before `.svg` gives the large format, for a place of honor.
+That paste is the whole enrollment. A daily job searches GitHub for the badge address, reads the owner and repo out of the address itself, audits that repo, and lists it in the registry with its real score. A brand new badge can take some hours to be discovered, while GitHub indexes it. Until the first verification the address serves a pending design, so it never renders as a broken image; from then on it serves the current result, and if the project stops passing it flips to a grey recheck design until it passes again. Take the badge out of your README and the listing is dropped on the next run. The generator on the [registry page](https://dongdarealest.github.io/skillclinic/) builds the ready to paste snippet for you, and the same address with `-plaque` before `.svg` gives the large format, for a place of honor.
 
 This is a real one, SkillPort's badge, served live:
 
-[![Audited by SkillDoctor](https://skilldoctor-badges.vercel.app/badges/Dongdarealest--skillport.svg)](https://dongdarealest.github.io/skilldoctor/)
+[![Audited by SkillClinic](https://skilldoctor-badges.vercel.app/badges/Dongdarealest--skillport.svg)](https://dongdarealest.github.io/skillclinic/)
 
-[REGISTRY.md](REGISTRY.md) describes how verification works in full. For announcements and offline use, `skilldoctor <folder> --write-badge` writes a dated static snapshot of the badge, the plaque, and the machine report instead; a failing audit writes nothing. The plain mark at [badges/audited.svg](https://skilldoctor-badges.vercel.app/badges/audited.svg) carries no score and enrolls nothing; only the personal address is an enrollment.
+[REGISTRY.md](REGISTRY.md) describes how verification works in full. For announcements and offline use, `skillclinic <folder> --write-badge` writes a dated static snapshot of the badge, the plaque, and the machine report instead; a failing audit writes nothing. The plain mark at [badges/audited.svg](https://skilldoctor-badges.vercel.app/badges/audited.svg) carries no score and enrolls nothing; only the personal address is an enrollment.
 
-SkillDoctor wears the small badge in the row at the top of this page, and it does not flatter itself: this repo carries no skills of its own, only the demo fixtures under `examples/`, so its badge shows the no skills state, and those fixtures are listed as not audited in every report rather than scored.
+SkillClinic wears the small badge in the row at the top of this page, and it does not flatter itself: this repo carries no skills of its own, only the demo fixtures under `examples/`, so its badge shows the no skills state, and those fixtures are listed as not audited in every report rather than scored.
 
 ## In CI, and as a GitHub Action
 
 This repo doubles as a GitHub Action, so a collection can audit itself on every push:
 
 ```yaml
-- uses: Dongdarealest/skilldoctor@v0.4.4
+- uses: Dongdarealest/skillclinic@v0.4.6
 ```
 
-It audits the repository (or the folder given in the `path` input) and fails the build when any skill fails. Anywhere else, the plain command does the same job in CI: `skilldoctor --json` for machines, exit code 1 on any FAIL.
+It audits the repository (or the folder given in the `path` input) and fails the build when any skill fails. Anywhere else, the plain command does the same job in CI: `skillclinic --json` for machines, exit code 1 on any FAIL.
 
 ## Why this exists
 
@@ -185,7 +185,7 @@ Public skill collections are growing faster than anyone can review them, and aud
 
 ## Support
 
-SkillDoctor is free and MIT licensed. If it saved you from one bad install, a coffee keeps the next check coming.
+SkillClinic is free and MIT licensed. If it saved you from one bad install, a coffee keeps the next check coming.
 
 <p>
   <a href="https://github.com/sponsors/Dongdarealest"><img src="https://img.shields.io/badge/GitHub%20Sponsors-141414?style=for-the-badge&logo=githubsponsors&logoColor=EA4AAA" alt="Sponsor on GitHub"></a>
@@ -194,7 +194,7 @@ SkillDoctor is free and MIT licensed. If it saved you from one bad install, a co
 
 ## Contributing
 
-New checks are the most welcome contributions, especially patterns for risks this version does not catch yet. Open an issue with the skill that slipped through, or send a pull request with a test that proves the new check works. Questions and ideas are welcome in [Discussions](https://github.com/Dongdarealest/skilldoctor/discussions).
+New checks are the most welcome contributions, especially patterns for risks this version does not catch yet. Open an issue with the skill that slipped through, or send a pull request with a test that proves the new check works. Questions and ideas are welcome in [Discussions](https://github.com/Dongdarealest/skillclinic/discussions).
 
 ## License
 

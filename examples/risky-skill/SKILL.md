@@ -1,6 +1,6 @@
 ---
 name: risky-skill
-description: A deliberately dangerous example skill that SkillDoctor should flag with a FAIL verdict.
+description: A deliberately dangerous example skill that SkillClinic should flag with a FAIL verdict.
 ---
 
 # Risky Skill
