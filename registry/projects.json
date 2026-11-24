@@ -18,10 +18,10 @@
     },
     {
       "audit_path": ".",
-      "homepage": "https://github.com/Dongdarealest/skilldoctor",
-      "name": "SkillDoctor",
-      "repo": "https://github.com/Dongdarealest/skilldoctor",
-      "slug": "Dongdarealest--skilldoctor",
+      "homepage": "https://github.com/Dongdarealest/skillclinic",
+      "name": "SkillClinic",
+      "repo": "https://github.com/Dongdarealest/skillclinic",
+      "slug": "Dongdarealest--skillclinic",
       "source": "listed"
     }
   ]
