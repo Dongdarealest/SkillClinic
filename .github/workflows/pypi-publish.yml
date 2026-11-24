@@ -3,9 +3,11 @@ name: Publish to PyPI
 on:
   release:
     types: [published]
+  workflow_dispatch:
 
 jobs:
   publish:
+    if: github.event_name == 'release'
     runs-on: ubuntu-latest
     environment: pypi
     permissions:
@@ -21,3 +23,28 @@ jobs:
           python -m build
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
+
+  publish-deprecated:
+    # One-off: publishes the final skillcheckup release, a thin shim that
+    # points at the new skillclinic package. Run only by hand, after the
+    # skillclinic 0.4.6 release is live on PyPI, and only once: the
+    # version 0.4.6 already exists after the first run.
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Build the deprecated shim
+        working-directory: deprecated/skillcheckup
+        run: |
+          pip install build
+          python -m build
+      - name: Publish the shim to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: deprecated/skillcheckup/dist/
